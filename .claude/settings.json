@@ -8,5 +8,29 @@
       "Bash(.venv/Scripts/python.exe -m py_compile game/web_api.py)",
       "Bash(taskkill //F //PID 1532)"
     ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& 'D:\\claude_code\\20260530_资料转换为个人技能\\material-to-own-skill\\.claude\\notify.ps1' Stop *> 'D:\\claude_code\\20260530_资料转换为个人技能\\material-to-own-skill\\.claude\\hook-run-output.log'\""
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& 'D:\\claude_code\\20260530_资料转换为个人技能\\material-to-own-skill\\.claude\\notify.ps1' Notification *>> 'D:\\claude_code\\20260530_资料转换为个人技能\\material-to-own-skill\\.claude\\hook-run-output.log'\""
+          }
+        ]
+      }
+    ]
   }
 }
