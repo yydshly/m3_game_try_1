@@ -1653,7 +1653,7 @@ function renderNPCCards(npcs) {
 
     item.appendChild(avatar);
     item.appendChild(name);
-    item.onclick = () => openTalk(npc.name);
+    // Strip items are visual presence indicators only — talk entry is via sidebar buttons
     container.appendChild(item);
   }
 }
@@ -1827,7 +1827,7 @@ async function doAction(a) {
 
 async function executeAction(type, target, text) {
   actionLoading = true;
-  // Re-render sidebar with latest cached actions + loading state on current buttons
+  // Re-render sidebar: highlight current button, dim others
   renderSideActionGroups(latestActions, type);
   try {
     const r = await fetch('/api/action', {
@@ -1837,10 +1837,11 @@ async function executeAction(type, target, text) {
     const d = await r.json();
     if (d.state) updateState(d.state);
   } catch(e) {
-    log('entry-system', '发送失败: ' + e.message);
+    log('entry-system', '操作失败: ' + e.message);
+    // On failure, restore buttons immediately — don't wait for next updateState
+    renderSideActionGroups(latestActions, null);
   } finally {
     actionLoading = false;
-    // updateState will call renderActions which re-caches latestActions
   }
 }
 
