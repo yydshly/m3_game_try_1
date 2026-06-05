@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python.exe -m py_compile web_main.py)",
+      "Bash(taskkill //F //PID 29536)",
+      "Bash(.venv/Scripts/python.exe web_main.py)",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -m py_compile game/web_api.py)",
+      "Bash(taskkill //F //PID 1532)"
+    ]
+  }
+}

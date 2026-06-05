@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>孤岛晚宴</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #080c14;
+  color: #d4dce8;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── 左：游戏主区 ─────────────────────────────── */
+.game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-topbar {
+  background: linear-gradient(180deg, #0f1520 0%, transparent 100%);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #1e2d42;
+  position: relative;
+  z-index: 10;
+}
+
+.topbar-title {
+  font-size: 14px;
+  color: #c9a227;
+  letter-spacing: 5px;
+}
+
+.phase-badge {
+  background: #161e2e;
+  border: 1px solid #1e2d42;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 11px;
+  color: #c9a227;
+  letter-spacing: 1px;
+}
+
+.advance-btn {
+  margin-left: auto;
+  background: rgba(201,162,39,0.1);
+  border: 1px solid rgba(201,162,39,0.3);
+  color: #c9a227;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.advance-btn:hover {
+  background: rgba(201,162,39,0.25);
+}
+
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  display: block;
+}
+
+/* ── 对话气泡层 ─────────────────────────────── */
+#dialogueBox {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  min-width: 400px;
+  max-width: 700px;
+  background: #0f1a28;
+  border: 1px solid #2a3a50;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: none;
+  z-index: 50;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+#dialogueBox.show { display: block; }
+
+.dialogue-npc {
+  font-size: 12px;
+  color: #c9a227;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.dialogue-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #d4dce8;
+  min-height: 40px;
+}
+
+.dialogue-continue {
+  font-size: 11px;
+  color: #3a4a5e;
+  text-align: right;
+  margin-top: 6px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+.dialogue-choices {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.choose-btn {
+  background: rgba(201,162,39,0.08);
+  border: 1px solid rgba(201,162,39,0.25);
+  color: #c9a227;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.15s;
+}
+.choose-btn:hover {
+  background: rgba(201,162,39,0.2);
+  border-color: rgba(201,162,39,0.5);
+}
+
+/* ── 任务提示条 ─────────────────────────────── */
+#hintBar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15,26,40,0.92);
+  border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 20px;
+  padding: 5px 18px;
+  font-size: 12px;
+  color: #c9a227;
+  z-index: 20;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ── 右侧信息栏 ─────────────────────────────── */
+.sidebar {
+  width: 240px;
+  background: #0f1520;
+  border-left: 1px solid #1e2d42;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sb-card {
+  border-bottom: 1px solid #1e2d42;
+}
+
+.sb-title {
+  padding: 7px 14px;
+  background: rgba(201,162,39,0.06);
+  color: #c9a227;
+  font-size: 10px;
+  letter-spacing: 2px;
+  border-bottom: 1px solid #1e2d42;
+}
+
+.sb-body {
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 2;
+  color: #5a6a7e;
+}
+
+.sb-body .v { color: #d4dce8; font-weight: 500; }
+
+.evidence-tag {
+  display: inline-block;
+  background: rgba(93,164,196,0.1);
+  border: 1px solid rgba(93,164,196,0.25);
+  color: #5da4c4;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  margin: 2px 2px;
+  cursor: default;
+}
+
+.npc-status {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.npc-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+/* 模式切换 */
+.mode-switch {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #1e2d42;
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #1e2d42;
+  color: #5a6a7e;
+  border-radius: 5px;
+  padding: 4px 0;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.mode-btn.active {
+  background: rgba(201,162,39,0.15);
+  border-color: rgba(201,162,39,0.4);
+  color: #c9a227;
+}
+.mode-btn:hover:not(.active) {
+  border-color: #2a3a50;
+  color: #8b949e;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #1e2d42; border-radius: 2px; }
+
+/* 结局弹窗 */
+#gameover {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(8,12,20,0.92);
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+#gameover.show { display: flex; }
+#gameover .card {
+  background: #0f1520;
+  border: 1px solid #7a6115;
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 520px;
+  width: 90%;
+  text-align: center;
+}
+#gameover h2 { color: #c9a227; font-size: 18px; letter-spacing: 4px; margin-bottom: 16px; }
+#gameover .summary { color: #d4dce8; font-size: 13px; line-height: 1.9; margin-bottom: 28px; white-space: pre-wrap; text-align: left; }
+#gameover button {
+  background: #7a6115; color: #080c14; border: none; border-radius: 6px;
+  padding: 10px 32px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 2px;
+}
+#gameover button:hover { background: #c9a227; }
+
+/* 开局遮罩 */
+#onboarding {
+  position: fixed; inset: 0;
+  background: rgba(8,12,20,0.95);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+}
+#onboarding .card {
+  background: #0f1520; border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 12px; padding: 40px 48px; max-width: 480px; text-align: center;
+}
+#onboarding h2 { color: #c9a227; font-size: 20px; letter-spacing: 6px; margin-bottom: 20px; font-weight: 400; }
+#onboarding p { color: #5a6a7e; font-size: 13px; line-height: 1.9; margin-bottom: 28px; }
+#onboarding .hint-list {
+  background: #080c14; border: 1px solid #1e2d42; border-radius: 8px;
+  padding: 14px 18px; text-align: left; margin-bottom: 28px; font-size: 12px;
+  line-height: 2.2; color: #5a6a7e;
+}
+#onboarding .hint-list span { color: #c9a227; font-family: monospace; }
+#onboarding button {
+  background: #7a6115; color: #080c14; border: none; border-radius: 6px;
+  padding: 11px 36px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 3px;
+}
+#onboarding button:hover { background: #c9a227; }
+
+/* 连接状态 */
+.conn-dot { width: 6px; height: 6px; border-radius: 50%; background: #5a6a7e; }
+.conn-dot.live { background: #3da84f; }
+
+/* 脚踩光效 */
+.click-hint {
+  position: absolute;
+  background: radial-gradient(circle, rgba(201,162,39,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: ripple 1s ease-out forwards;
+}
+@keyframes ripple { 0%{transform:scale(0); opacity:1} 100%{transform:scale(3); opacity:0} }
+</style>
+</head>
+<body>
+
+<!-- 开局引导 -->
+<div id="onboarding">
+  <div class="card">
+    <h2>孤岛晚宴</h2>
+    <p>暴风雨困住了所有人。今晨，岛主周慎之被发现死在书房。<br>你是被请来的私人侦探。天亮之前，找出真凶。</p>
+    <div class="hint-list">
+      <span>点击 NPC</span> — 与对方对话<br>
+      <span>点击门口</span> — 前往其他房间<br>
+      <span>调查模式</span> — 点击场景物品获取证据<br>
+      <span>推进时段</span> — 时间流逝，旁白播报
+    </div>
+    <button onclick="startGame()">开始调查</button>
+  </div>
+</div>
+
+<!-- 结局 -->
+<div id="gameover">
+  <div class="card">
+    <h2 id="go-title">结局</h2>
+    <div class="summary" id="go-summary"></div>
+    <button onclick="restartGame()">再来一局</button>
+  </div>
+</div>
+
+<!-- 游戏主区 -->
+<div class="game-area">
+  <div class="game-topbar">
+    <span class="topbar-title">孤 岛 晚 宴</span>
+    <div class="phase-badge" id="phaseBadge">晚宴</div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span id="clockLabel" style="font-size:12px;color:#5a6a7e">深夜 0:00</span>
+      <button class="advance-btn" onclick="advanceTime()">⏰ 推进时段</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrapper">
+    <canvas id="gameCanvas"></canvas>
+    <div id="hintBar">正在加载…</div>
+    <div id="dialogueBox">
+      <div class="dialogue-npc" id="dNpc"></div>
+      <div class="dialogue-text" id="dText"></div>
+      <div class="dialogue-continue" id="dCont" onclick="continueDialogue()">点击继续 ▼</div>
+      <div class="dialogue-choices" id="dChoices"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 右侧栏 -->
+<div class="sidebar">
+  <div class="mode-switch">
+    <button class="mode-btn active" id="modeTalk" onclick="setMode('talk')">对话</button>
+    <button class="mode-btn" id="modeInvest" onclick="setMode('investigate')">调查</button>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-title">状态</div>
+    <div class="sb-body">
+      <div>时段 <span class="v" id="s-clock">—</span></div>
+      <div>位置 <span class="v" id="s-room">—</span></div>
+    </div>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-title">持有证据</div>
+    <div class="sb-body" id="s-evidence">
+      <span style="color:#3a4a5e;font-size:11px">暂无</span>
+    </div>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-title">在场人物</div>
+    <div class="sb-body" id="s-npcs">—</div>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-title">任务指引</div>
+    <div class="sb-body" id="s-hint" style="font-size:11px;color:#c9a227;line-height:1.8">
+      —
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// 数据：6 个房间
+// ══════════════════════════════════════════════════════
+const ROOMS = {
+  hall: {
+    name: "大厅",
+    desc: "古堡大厅,水晶吊灯发出昏黄的光。窗外暴风雨呼啸。",
+    // Canvas 背景风格
+    bg: '#0a0f1a',
+    floor: '#0d1220',
+    // NPC 位置 (x%, y%)
+    npcs: [
+      { id:'chenbo',  name:'陈伯',   x:15, y:30, color:'#e3b341' },
+      { id:'susu',    name:'苏苏',   x:15, y:70, color:'#db61a2' },
+      { id:'xiaozhang',name:'小张',  x:85, y:70, color:'#ffa657' },
+    ],
+    // 门口热区 [x1%,y1%,x2%,y2%, targetRoom, label]
+    doors: [
+      {x:45,y:0,x2:55,y2:12, target:'study',     label:'书房' },
+      {x:45,y:88,x2:55,y2:100,target:'corridor', label:'走廊' },
+    ],
+    items: [],
+  },
+
+  study: {
+    name: "书房",
+    desc: "周慎之的书房。书架林立,书桌上散落着文件和一支钢笔。空气中有淡淡的药味。",
+    bg: '#090d16',
+    floor: '#0b1020',
+    npcs: [
+      { id:'chenbo',  name:'陈伯',   x:20, y:40, color:'#e3b341' },
+      { id:'wangzong',name:'王总',   x:75, y:40, color:'#79c0ff' },
+    ],
+    doors: [
+      {x:45,y:88,x2:55,y2:100,target:'hall', label:'大厅' },
+    ],
+    items: [
+      {x:50,y:50,r:12, label:'书桌', evidence:'新遗嘱草稿', found:false },
+    ],
+  },
+
+  corridor: {
+    name: "走廊",
+    desc: "长长的走廊,墙上挂着几幅人物油画。脚步声在空旷中回响。",
+    bg: '#090c17',
+    floor: '#0c1122',
+    npcs: [
+      { id:'linwan', name:'林婉', x:50, y:25, color:'#d84141' },
+      { id:'afu',   name:'阿福', x:50, y:75, color:'#3da84f' },
+    ],
+    doors: [
+      {x:45,y:0,x2:55,y2:12,  target:'hall',    label:'大厅' },
+      {x:0, y:40,x2:12,y2:60, target:'kitchen', label:'厨房' },
+      {x:88,y:40,x2:100,y2:60,target:'dining', label:'餐厅' },
+    ],
+    items: [],
+  },
+
+  kitchen: {
+    name: "厨房",
+    desc: "别墅厨房,灶台上还有余温。阿福一个人坐在角落,神情不安。",
+    bg: '#080e14',
+    floor: '#0a1218',
+    npcs: [
+      { id:'afu', name:'阿福', x:50, y:50, color:'#3da84f' },
+    ],
+    doors: [
+      {x:88,y:40,x2:100,y2:60,target:'corridor', label:'走廊' },
+    ],
+    items: [],
+  },
+
+  dining: {
+    name: "餐厅",
+    desc: "长餐桌上摆着吃了一半的晚宴菜肴,酒杯东倒西歪,像是匆忙离席。",
+    bg: '#0a0d17',
+    floor: '#0d1020',
+    npcs: [
+      { id:'wangzong',name:'王总', x:50, y:35, color:'#79c0ff' },
+      { id:'susu',    name:'苏苏', x:50, y:65, color:'#db61a2' },
+    ],
+    doors: [
+      {x:0,y:40,x2:12,y2:60,target:'corridor', label:'走廊' },
+    ],
+    items: [],
+  },
+
+  security: {
+    name: "保安室",
+    desc: "监控室,几块屏幕闪烁着。大部分时间,这里只有小张一个人。",
+    bg: '#080c14',
+    floor: '#0a0e1a',
+    npcs: [
+      { id:'xiaozhang',name:'小张', x:50, y:50, color:'#ffa657' },
+    ],
+    doors: [
+      {x:45,y:88,x2:55,y2:100,target:'hall', label:'大厅' },
+    ],
+    items: [
+      {x:50,y:35,r:10, label:'监控屏', evidence:null, found:false },
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════
+// 状态
+// ══════════════════════════�══════════════════════════
+let sessionId = null;
+let es = null;
+let gameEnded = false;
+let currentRoom = 'hall';
+let mode = 'talk'; // 'talk' | 'investigate'
+let player = { x: 50, y: 50 }; // 玩家在 canvas 上的百分比位置
+let playerTarget = { x: 50, y: 50 };
+let animFrame = null;
+
+// 对话队列
+let dialogueQueue = [];
+let currentNpc = null;
+
+// SSE 收集的消息（用于在对话框关闭后显示）
+let pendingMessages = [];
+
+// canvas 尺寸
+let CW = 0, CH = 0;
+
+// ══════════════════════════════════════════════════════
+// 启动
+// ══════════════════════════════════════════════════════
+function startGame() {
+  document.getElementById('onboarding').style.display = 'none';
+  initGame();
+}
+
+async function initGame() {
+  try {
+    const r = await fetch('/api/session', {method:'POST'});
+    const d = await r.json();
+    sessionId = d.session_id;
+    updateState(d.state);
+    connectSSE(sessionId);
+    draw();
+  } catch(e) {
+    showHint('服务器连接失败: ' + e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// SSE
+// ══════════════════════════════════════════════════════
+function connectSSE(sid) {
+  if (es) es.close();
+  es = new EventSource(`/api/stream/${sid}`);
+  es.addEventListener('connected', () => {});
+  es.addEventListener('narrator', e => {
+    const chunks = JSON.parse(e.data);
+    showDialogue(null, chunks, null);
+  });
+  es.addEventListener('npc_reply', e => {
+    const data = JSON.parse(e.data);
+    const npc = data.npc;
+    const chunks = data.text;
+    currentNpc = npc;
+    showDialogue(npc, chunks, null);
+  });
+  es.addEventListener('npc_typing', e => {
+    const data = JSON.parse(e.data);
+    // 立即显示"正在打字"指示，不等待
+    showTypingIndicator(data.npc);
+  });
+  es.addEventListener('narrator', e => {
+  es.addEventListener('system', e => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'game_over') {
+      showGameOver(data);
+      return;
+    }
+    // 时段变化时重新绘制
+    if (data.type === 'clock') {
+      updateHint(data.text);
+    }
+  });
+  es.addEventListener('game_over', e => showGameOver(JSON.parse(e.data)));
+  es.onerror = () => {};
+}
+
+// ══════════════════════════════════════════════════════
+// Canvas 绘制
+// ══════════════════════════════════════════════════════
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  CW = canvas.width; CH = canvas.height;
+  draw();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// 玩家补间动画
+function animatePlayer() {
+  const dx = playerTarget.x - player.x;
+  const dy = playerTarget.y - player.y;
+  if (Math.abs(dx) < 0.3 && Math.abs(dy) < 0.3) {
+    player.x = playerTarget.x;
+    player.y = playerTarget.y;
+  } else {
+    player.x += dx * 0.18;
+    player.y += dy * 0.18;
+  }
+  draw();
+  animFrame = requestAnimationFrame(animatePlayer);
+}
+
+function draw() {
+  if (!CW) { resizeCanvas(); return; }
+  ctx.clearRect(0, 0, CW, CH);
+
+  const room = ROOMS[currentRoom];
+
+  // ── 背景渐变
+  const grad = ctx.createRadialGradient(CW*0.5, CH*0.4, 0, CW*0.5, CH*0.4, CW*0.7);
+  grad.addColorStop(0, room.floor);
+  grad.addColorStop(1, room.bg);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, CW, CH);
+
+  // ── 地板纹理（竖线条）
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < CW; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CH); ctx.stroke();
+  }
+  for (let y = 0; y < CH; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke();
+  }
+
+  // ── 房间名称
+  ctx.fillStyle = 'rgba(201,162,39,0.15)';
+  ctx.font = `bold ${Math.round(CW*0.06)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(room.name, CW*0.5, CH*0.1);
+
+  // ── 门口热区
+  for (const door of (room.doors || [])) {
+    drawDoor(door);
+  }
+
+  // ── 物品热区（调查模式）
+  if (mode === 'investigate') {
+    for (const item of (room.items || [])) {
+      drawItem(item);
+    }
+  }
+
+  // ── NPC
+  for (const npc of (room.npcs || [])) {
+    drawNPC(npc);
+  }
+
+  // ── 玩家
+  drawPlayer();
+
+  // ── 场景简介（左下角）
+  ctx.fillStyle = 'rgba(90,106,126,0.7)';
+  ctx.font = `${Math.round(CW*0.012)}px PingFang SC, sans-serif`;
+  ctx.textAlign = 'left';
+  const lines = wrapText(room.desc, CW*0.3);
+  lines.forEach((l, i) => {
+    ctx.fillText(l, CW*0.03, CH*0.88 + i * (CH*0.025));
+  });
+}
+
+function drawNPC(npc) {
+  const x = npc.x * CW / 100;
+  const y = npc.y * CH / 100;
+  const r = Math.round(Math.min(CW, CH) * 0.06);
+
+  // 外发光
+  ctx.shadowColor = npc.color;
+  ctx.shadowBlur = 18;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = hexAlpha(npc.color, 0.2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // 头像底
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(15,21,32,0.9)';
+  ctx.fill();
+  ctx.strokeStyle = npc.color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 名字
+  ctx.fillStyle = npc.color;
+  ctx.font = `bold ${Math.round(r*0.45)}px PingFang SC, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(npc.name, x, y + r + CH*0.04);
+
+  // 说话中动画
+  if (currentNpc === npc.id) {
+    ctx.strokeStyle = npc.color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(x, y, r + 4, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawDoor(door) {
+  const x1 = door.x * CW / 100, y1 = door.y * CH / 100;
+  const x2 = door.x2 * CW / 100, y2 = door.y2 * CH / 100;
+  const w = x2 - x1, h = y2 - y1;
+  const cx = (x1+x2)/2, cy = (y1+y2)/2;
+
+  ctx.fillStyle = 'rgba(201,162,39,0.08)';
+  ctx.strokeStyle = 'rgba(201,162,39,0.3)';
+  ctx.lineWidth = 1;
+  if (w > h) { // 横向门口
+    ctx.fillRect(cx - w/2, y1, w, h);
+    ctx.strokeRect(cx - w/2, y1, w, h);
+  } else { // 纵向门口
+    ctx.fillRect(x1, cy - h/2, w, h);
+    ctx.strokeRect(x1, cy - h/2, w, h);
+  }
+
+  ctx.fillStyle = 'rgba(201,162,39,0.5)';
+  ctx.font = `${Math.round(CW*0.012)}px PingFang SC, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(door.label, cx, cy + 4);
+}
+
+function drawItem(item) {
+  const x = item.x * CW / 100;
+  const y = item.y * CH / 100;
+  const r = item.r * Math.min(CW, CH) / 100;
+
+  // 高亮圈
+  ctx.beginPath();
+  ctx.arc(x, y, r + 4, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(93,164,196,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3,3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 物品图标
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(93,164,196,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(93,164,196,0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 标签
+  ctx.fillStyle = 'rgba(93,164,196,0.8)';
+  ctx.font = `${Math.round(CW*0.011)}px PingFang SC`;
+  ctx.textAlign = 'center';
+  ctx.fillText(item.label, x, y + r + CH*0.025);
+}
+
+function drawPlayer() {
+  const x = player.x * CW / 100;
+  const y = player.y * CH / 100;
+  const r = Math.round(Math.min(CW, CH) * 0.04);
+
+  // 外发光
+  ctx.shadowColor = '#c9a227';
+  ctx.shadowBlur = 20;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(201,162,39,0.25)';
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(201,162,39,0.9)';
+  ctx.fill();
+
+  // 内圈
+  ctx.beginPath();
+  ctx.arc(x, y, r*0.5, 0, Math.PI*2);
+  ctx.fillStyle = '#c9a227';
+  ctx.fill();
+}
+
+function wrapText(text, maxWidth) {
+  // 简单按字符数分割
+  const chars = Math.floor(maxWidth / (CW * 0.012));
+  const words = text.split('');
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    if ((line + w).length > chars) { lines.push(line); line = w; }
+    else line += w;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function hexAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ══════════════════════════════════════════════════════
+// 点击检测
+// ══════════════════════════════════════════════════════
+canvas.addEventListener('click', async (e) => {
+  if (gameEnded) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const mx = ((e.clientX - rect.left) / rect.width) * 100;
+  const my = ((e.clientY - rect.top) / rect.height) * 100;
+
+  // 玩家移动动画
+  playerTarget.x = mx;
+  playerTarget.y = my;
+
+  const room = ROOMS[currentRoom];
+
+  if (mode === 'investigate') {
+    // ── 调查模式：检测物品
+    for (const item of (room.items || [])) {
+      const dx = mx - item.x, dy = my - item.y;
+      if (Math.sqrt(dx*dx + dy*dy) < item.r * 1.5) {
+        if (item.found) { showHint('这里已经调查过了'); return; }
+        item.found = true;
+        showHint(`调查: ${item.label}`);
+        await sendCmd('调查');
+        return;
+      }
+    }
+    // 点了空白处，切回对话模式
+    setMode('talk');
+  }
+
+  // ── 检测门口
+  for (const door of (room.doors || [])) {
+    if (mx >= door.x && mx <= door.x2 && my >= door.y && my <= door.y2) {
+      showHint(`前往: ${door.label}`);
+      currentRoom = door.target;
+      draw();
+      updateRoomHint();
+      await sendCmd(`移动到 ${ROOMS[door.target].name}`);
+      return;
+    }
+  }
+
+  // ── 检测 NPC（对话模式）
+  for (const npc of (room.npcs || [])) {
+    const dx = mx - npc.x, dy = my - npc.y;
+    if (Math.sqrt(dx*dx + dy*dy) < 10) {
+      currentNpc = npc.id;
+      showHint(`与 ${npc.name} 对话中…`);
+      // 弹出默认问话
+      const defaultQ = getDefaultQuestion(npc.id);
+      await sendCmd(`跟 ${npc.name} 说: ${defaultQ}`);
+      return;
+    }
+  }
+});
+
+function getDefaultQuestion(npcId) {
+  const q = {
+    chenbo:  '周先生昨晚看起来怎么样？',
+    linwan:  '你觉得周先生是怎么死的？',
+    susu:    '你昨晚听到了什么？',
+    wangzong:'你和周先生是什么关系？',
+    afu:     '昨晚你有没有看到什么可疑的人？',
+    xiaozhang:'昨晚的监控有什么异常吗？',
+  };
+  return q[npcId] || '你好。';
+}
+
+// ══════════════════════════════════════════════════════
+// 对话框
+// ══════════════════════════════════════════════════════
+function showTypingIndicator(npcName) {
+  // 立即显示"正在思考"指示，不等待
+  const box = document.getElementById('dialogueBox');
+  document.getElementById('dNpc').textContent = npcName || '???';
+  document.getElementById('dNpc').style.display = 'block';
+  document.getElementById('dText').innerHTML = '<span style="color:#5a6a7e;font-style:italic">……</span>';
+  document.getElementById('dCont').style.display = 'none';
+  document.getElementById('dChoices').innerHTML = '';
+  box.classList.add('show');
+}
+
+function showDialogue(npcName, textChunks, choices) {
+  dialogueQueue = [...textChunks];
+  currentNpc = npcName;
+
+  const box = document.getElementById('dialogueBox');
+  document.getElementById('dNpc').textContent = npcName || '旁白';
+  document.getElementById('dNpc').style.display = npcName ? 'block' : 'none';
+  document.getElementById('dChoices').innerHTML = '';
+  document.getElementById('dCont').style.display = 'block';
+  document.getElementById('dText').innerHTML = '';
+  box.classList.add('show');
+
+  typeNext();
+}
+
+function typeNext() {
+  if (dialogueQueue.length === 0) {
+    document.getElementById('dCont').textContent = '点击继续 ▼';
+    return;
+  }
+  document.getElementById('dCont').textContent = '';
+
+  const chunk = dialogueQueue.shift();
+  const el = document.getElementById('dText');
+  typeText(el, chunk, () => {
+    if (dialogueQueue.length === 0) {
+      document.getElementById('dCont').textContent = '点击继续 ▼';
+    } else {
+      document.getElementById('dCont').textContent = '▼';
+    }
+  });
+}
+
+function typeText(el, text, done) {
+  let i = 0;
+  el.textContent = '';
+  const cur = document.createElement('span');
+  el.appendChild(cur);
+  function next() {
+    if (i < text.length) {
+      el.insertBefore(document.createTextNode(text[i]), cur);
+      i++;
+      setTimeout(next, 30 + Math.random() * 30);
+    } else {
+      cur.remove();
+      done();
+    }
+  }
+  next();
+}
+
+function continueDialogue() {
+  if (dialogueQueue.length > 0) {
+    typeNext();
+  } else {
+    closeDialogue();
+  }
+}
+
+function closeDialogue() {
+  document.getElementById('dialogueBox').classList.remove('show');
+  currentNpc = null;
+  dialogueQueue = [];
+  draw();
+}
+
+// ══════════════════════════════════════════════════════
+// 状态同步
+// ══════════════════════════════════════════════════════
+async function sendCmd(cmd) {
+  try {
+    const r = await fetch('/api/command', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: sessionId, command: cmd})
+    });
+    const d = await r.json();
+    if (d.state) updateState(d.state);
+  } catch(e) {
+    showHint('发送失败: ' + e.message);
+  }
+}
+
+function updateState(s) {
+  if (!s) return;
+
+  // 阶段名称
+  const PNAME = {dinner:'晚宴',investigation:'调查',confrontation:'对峙',ending:'结局'};
+  document.getElementById('phaseBadge').textContent = PNAME[s.phase] || s.phase || '—';
+  document.getElementById('clockLabel').textContent = s.clock_name || '—';
+  document.getElementById('s-clock').textContent = s.clock_name || '—';
+  document.getElementById('s-room').textContent = ROOMS[currentRoom]?.name || '—';
+
+  // 证据
+  const inv = s.inventory || [];
+  document.getElementById('s-evidence').innerHTML = inv.length
+    ? inv.map(e => `<span class="evidence-tag">${e}</span>`).join('')
+    : '<span style="color:#3a4a5e;font-size:11px">暂无</span>';
+
+  // NPC 位置
+  const locs = s.npc_locations || {};
+  const room = ROOMS[currentRoom];
+  const present = room ? room.npcs.map(n => n.id) : [];
+  const presentNames = present.join('、');
+  document.getElementById('s-npcs').innerHTML = presentNames
+    ? `<div style="color:#d4dce8">${presentNames}</div>`
+    : '<div style="color:#3a4a5e">—</div>';
+
+  // 任务指引
+  updateHint(s);
+
+  // 阶段变化时更新 hint bar
+  if (s.phase === 'confrontation') {
+    showHint('【对峙阶段】你可以指认凶手了！');
+  }
+}
+
+function updateHint(s) {
+  if (!s) return;
+  let hint = '';
+  if (s.phase === 'dinner') {
+    const talked = (s.talked_npcs || []).length;
+    hint = talked >= 5
+      ? '已了解所有人，去调查吧'
+      : `先和大家打个招呼 (${talked}/5)`;
+  } else if (s.phase === 'investigation') {
+    const ev = (s.inventory || []).length;
+    hint = ev >= 2
+      ? '证据足够，可以推进时段或发起指认了'
+      : `继续收集证据 (${ev}/2)`;
+  } else if (s.phase === 'confrontation') {
+    hint = '点击 NPC 对话，或输入「指认 凶手名」';
+  }
+  document.getElementById('s-hint').textContent = hint;
+  showHint(hint);
+}
+
+function showHint(text) {
+  const bar = document.getElementById('hintBar');
+  bar.textContent = text;
+  bar.style.opacity = '1';
+  clearTimeout(window._hintTimer);
+  window._hintTimer = setTimeout(() => {
+    bar.style.opacity = '0';
+  }, 3000);
+}
+
+function updateRoomHint() {
+  const room = ROOMS[currentRoom];
+  if (!room) return;
+  const present = (room.npcs || []).map(n => n.name).join('、');
+  showHint(`${room.name} · 在场: ${present || '无人'}`);
+}
+
+// ══════════════════════════════════════════════════════
+// 模式切换
+// ══════════════════════════════════════════════════════
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeTalk').classList.toggle('active', m === 'talk');
+  document.getElementById('modeInvest').classList.toggle('active', m === 'investigate');
+  canvas.style.cursor = m === 'investigate' ? 'crosshair' : 'pointer';
+  draw();
+  if (m === 'investigate') showHint('调查模式: 点击场景中的物品进行调查');
+}
+
+// ══════════════════════════════════════════════════════
+// 时间推进
+// ══════════════════════════════════════════════════════
+async function advanceTime() {
+  showHint('时段推进中…');
+  await sendCmd('推进时段');
+}
+
+// ══════════════════════════════════════════════════════
+// 结局
+// ══════════════════════════════════════════════════════
+function showGameOver(d) {
+  gameEnded = true;
+  document.getElementById('go-title').textContent = d.verdict || '结局';
+  document.getElementById('go-summary').textContent =
+    (d.summary || '') + '\n\n真凶: ' + (d.culprit || '?');
+  document.getElementById('gameover').classList.add('show');
+}
+
+async function restartGame() {
+  document.getElementById('gameover').classList.remove('show');
+  gameEnded = false;
+  if (es) { es.close(); es = null; }
+  currentRoom = 'hall';
+  player = {x:50, y:50};
+  playerTarget = {x:50, y:50};
+  // 重置物品
+  for (const room of Object.values(ROOMS)) {
+    if (room.items) room.items.forEach(i => i.found = false);
+  }
+  initGame();
+}
+
+// ══════════════════════════════════════════════════════
+// 初始化
+// ══════════════════════════════════════════════════════
+resizeCanvas();
+animatePlayer();
+</script>
+</body>
+</html>

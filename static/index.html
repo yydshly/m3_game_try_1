@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>孤岛晚宴</title>
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0f1520;
+    --surface2: #161e2e;
+    --border: #1e2d42;
+    --gold: #c9a227;
+    --gold-dim: #7a6115;
+    --text: #d4dce8;
+    --muted: #5a6a7e;
+    --narrator: #5da4c4;
+    --system: #8b6fdb;
+    --danger: #d94040;
+    --success: #3da84f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 背景氛围层 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(201,162,39,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(89,132,192,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* === 顶部栏 === */
+  header {
+    background: linear-gradient(180deg, var(--surface) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+  }
+
+  header h1 {
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 6px;
+    font-weight: 400;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .phase-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px 10px;
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* === 主区域 === */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* === 左侧场景日志 === */
+  .log-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* 旁白 */
+  .entry-narrator {
+    margin: 12px 0;
+    padding: 10px 14px;
+    color: var(--narrator);
+    font-size: 13px;
+    line-height: 1.9;
+    border-left: 2px solid rgba(93,164,196,0.4);
+    background: rgba(93,164,196,0.05);
+    border-radius: 0 4px 4px 0;
+    font-style: italic;
+  }
+
+  /* 系统 */
+  .entry-system {
+    color: var(--system);
+    font-size: 12px;
+    padding: 4px 0;
+    opacity: 0.8;
+  }
+
+  /* 对话 */
+  .entry-dialogue {
+    display: flex;
+    gap: 10px;
+    margin: 6px 0;
+    align-items: flex-start;
+  }
+
+  .entry-dialogue.player {
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    font-weight: bold;
+    border: 1px solid var(--border);
+  }
+
+  .avatar.chenbo  { background: rgba(227,179,65,0.15); color: #e3b341; border-color: rgba(227,179,65,0.3); }
+  .avatar.linwan  { background: rgba(216,65,65,0.15);  color: #d84141; border-color: rgba(216,65,65,0.3); }
+  .avatar.susu    { background: rgba(219,97,162,0.15); color: #db61a2; border-color: rgba(219,97,162,0.3); }
+  .avatar.wangzong{ background: rgba(121,192,255,0.15);color: #79c0ff; border-color: rgba(121,192,255,0.3); }
+  .avatar.afu    { background: rgba(61,168,79,0.15);  color: #3da84f; border-color: rgba(61,168,79,0.3); }
+  .avatar.xiaozhang{ background: rgba(255,166,87,0.15);color: #ffa657; border-color: rgba(255,166,87,0.3); }
+  .avatar.player-avatar { background: rgba(201,162,39,0.15); color: var(--gold); border-color: rgba(201,162,39,0.3); }
+
+  .bubble {
+    max-width: 60%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    position: relative;
+  }
+
+  .entry-dialogue:not(.player) .bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px 12px 12px 12px;
+  }
+
+  .entry-dialogue.player .bubble {
+    background: rgba(201,162,39,0.12);
+    border: 1px solid rgba(201,162,39,0.25);
+    border-radius: 12px 2px 12px 12px;
+    color: var(--text);
+  }
+
+  .speaker-name {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  .player-label { color: var(--gold) !important; }
+
+  /* 打字光标 */
+  .typing-cursor {
+    display: inline-block;
+    width: 2px; height: 14px;
+    background: var(--gold);
+    vertical-align: middle;
+    animation: blink 0.7s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* === 右侧信息栏 === */
+  .sidebar {
+    width: 260px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sidebar-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .sidebar-title {
+    padding: 7px 12px;
+    background: rgba(201,162,39,0.07);
+    color: var(--gold);
+    font-size: 10px;
+    letter-spacing: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-body {
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 2;
+    color: var(--muted);
+  }
+
+  .sidebar-body .val {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .evidence-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .etag {
+    background: rgba(93,164,196,0.1);
+    border: 1px solid rgba(93,164,196,0.25);
+    color: var(--narrator);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+
+  .npc-pos-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    font-size: 12px;
+  }
+
+  /* === 动作按钮区 === */
+  .action-bar {
+    background: linear-gradient(0deg, var(--surface) 0%, transparent 100%);
+    padding: 12px 24px 16px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .action-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .action-group-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-right: 3px;
+    white-space: nowrap;
+  }
+
+  .action-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 5px 13px;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,162,39,0.08);
+  }
+
+  .action-btn:disabled,
+  .action-btn.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* === 对话输入弹层 === */
+  #talk-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,12,20,0.82);
+    backdrop-filter: blur(3px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #talk-overlay.show { display: flex; }
+  #talk-overlay .talk-card {
+    background: var(--surface);
+    border: 1px solid rgba(201,162,39,0.3);
+    border-radius: 10px;
+    padding: 28px 32px;
+    width: 380px;
+    max-width: 90vw;
+  }
+  #talk-overlay .talk-title {
+    color: var(--gold);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  #talk-overlay .preset-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .preset-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  #talk-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 9px 12px;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+    box-sizing: border-box;
+  }
+  #talk-input:focus { border-color: var(--gold-dim); }
+  .talk-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .talk-btns button { flex: 1; padding: 8px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 1px; transition: background 0.2s; }
+  #talk-send { background: var(--gold-dim); color: var(--bg); }
+  #talk-send:hover { background: var(--gold); }
+  #talk-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  #talk-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+  /* === 场景转场 === */
+  #scene-flash {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+  #scene-flash.active { opacity: 1; pointer-events: all; }
+  #scene-flash .flash-text {
+    color: var(--gold);
+    font-size: 15px;
+    letter-spacing: 4px;
+    opacity: 0;
+    transition: opacity 0.3s 0.15s;
+  }
+  #scene-flash.active .flash-text { opacity: 1; }
+
+  /* === 连接状态 === */
+  .conn-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .conn-dot.live { background: var(--success); }
+
+  /* === 开局引导 === */
+  #onboarding {
+    position: fixed;
+    inset: 0;
+    background: rgba(8,12,20,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+
+  #onboarding .card {
+    background: var(--surface);
+    border: 1px solid rgba(201,162,39,0.3);
+    border-radius: 12px;
+    padding: 40px 48px;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  #onboarding h2 {
+    color: var(--gold);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 6px;
+    margin-bottom: 20px;
+  }
+
+  #onboarding p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.9;
+    margin-bottom: 28px;
+  }
+
+  #onboarding .cmd-list {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    text-align: left;
+    margin-bottom: 28px;
+    font-size: 12px;
+    line-height: 2.2;
+    color: var(--muted);
+  }
+
+  #onboarding .cmd-list span {
+    color: var(--gold);
+    font-family: monospace;
+  }
+
+  #onboarding button {
+    background: var(--gold-dim);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 11px 36px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 3px;
+    transition: background 0.2s;
+  }
+
+  #onboarding button:hover { background: var(--gold); }
+
+  /* === Game Over === */
+  #gameover {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,12,20,0.92);
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+  }
+
+  #gameover.show { display: flex; }
+
+  #gameover .card {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 520px;
+    width: 90%;
+    text-align: center;
+  }
+
+  #gameover h2 {
+    color: var(--gold);
+    font-size: 18px;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+  }
+
+  #gameover .verdict {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  #gameover .summary {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.9;
+    margin-bottom: 28px;
+    white-space: pre-wrap;
+    text-align: left;
+  }
+
+  #gameover button {
+    background: var(--gold-dim);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 32px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+
+  #gameover button:hover { background: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- 开局引导 -->
+<div id="onboarding">
+  <div class="card">
+    <h2>孤岛晚宴</h2>
+    <p>暴风雨困住了所有人。今晨，岛主周慎之被发现死在书房。<br>你是被请来的私人侦探，天亮之前，找出真凶。</p>
+    <div class="cmd-list">
+      <span>跟 陈伯 说: ...</span> — 与某人对话<br>
+      <span>推进时段</span> — 时间推进，旁白播报场景<br>
+      <span>移动到 书房</span> — 去某地调查<br>
+      <span>调查</span> — 在当前地点搜集证据<br>
+      <span>指认 林婉</span> — 在对峙阶段指认凶手
+    </div>
+    <button onclick="startGame()">开始调查</button>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div id="gameover">
+  <div class="card">
+    <h2 id="go-title">结局</h2>
+    <div class="verdict" id="go-verdict"></div>
+    <div class="summary" id="go-summary"></div>
+    <button onclick="restartGame()">再来一局</button>
+  </div>
+</div>
+
+<!-- 场景转场 -->
+<div id="scene-flash">
+  <div class="flash-text" id="flash-text"></div>
+</div>
+
+<!-- 对话输入弹层 -->
+<div id="talk-overlay">
+  <div class="talk-card">
+    <div class="talk-title" id="talk-title">盘问</div>
+    <div class="preset-list" id="preset-list"></div>
+    <textarea id="talk-input" rows="3" placeholder="输入你想问的话……"></textarea>
+    <div class="talk-btns">
+      <button id="talk-cancel">取消</button>
+      <button id="talk-send">发问</button>
+    </div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<header>
+  <h1>孤 岛 晚 宴</h1>
+  <div class="header-right">
+    <span id="clockLabel">—</span>
+    <div class="phase-badge" id="phaseBadge">—</div>
+    <div class="conn-dot" id="connDot"></div>
+  </div>
+</header>
+
+<div class="main">
+  <div class="log-panel" id="logPanel"></div>
+
+  <div class="sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-title">当前状态</div>
+      <div class="sidebar-body">
+        <div>时段 <span class="val" id="s-clock">—</span></div>
+        <div>阶段 <span class="val" id="s-phase">—</span></div>
+        <div>位置 <span class="val" id="s-location">—</span></div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">持有证据</div>
+      <div class="sidebar-body">
+        <div class="evidence-tags" id="s-evidence">
+          <span style="color:var(--muted);font-size:11px">暂无</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">各人位置</div>
+      <div class="sidebar-body" id="s-npcs">
+        <div style="color:var(--muted);font-size:11px">—</div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">调查进度</div>
+      <div class="sidebar-body">
+        <div>已对话 <span class="val" id="s-talked">0</span> 人</div>
+        <div>已获证据 <span class="val" id="s-evcount">0</span> 项</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="action-bar">
+  <div class="action-groups" id="actionGroups">
+    <!-- 动态渲染 -->
+  </div>
+</div>
+
+<script>
+const NPC_COLORS = {
+  '陈伯':'chenbo','林婉':'linwan','苏苏':'susu',
+  '王总':'wangzong','阿福':'afu','小张':'xiaozhang'
+};
+const PHASE_NAME = {
+  dinner:'晚宴', investigation:'调查', confrontation:'对峙', ending:'结局'
+};
+const AVATAR_LETTER = {
+  '陈伯':'伯','林婉':'婉','苏苏':'苏',
+  '王总':'王','阿福':'福','小张':'张'
+};
+
+// 各 NPC 的预设问题
+const PRESETS = {
+  '陈伯': ['你昨晚在哪？', '茶杯的事你知道吗？', '新遗嘱是怎么回事？', '周老爷有什么仇家吗？'],
+  '林婉': ['你和周老爷是什么关系？', '你给他开了什么药？', '你昨晚几点睡的？', '你知道新遗嘱的事吗？'],
+  '苏苏': ['你为什么来岛上？', '你和周老爷吵过架吗？', '昨晚你听到了什么？', '你知道遗产的事吗？'],
+  '王总': ['你欠周老爷多少钱？', '借据在哪？', '你昨晚去了哪里？', '你和林婉什么关系？'],
+  '阿福': ['你昨晚看到了什么？', '有人进过书房吗？', '厨房有什么异常吗？', '你知道谁下的毒吗？'],
+  '小张': ['你昨晚巡逻了吗？', '监控为什么有空白？', '有人进出过书房吗？', '你听到了什么动静？'],
+};
+
+let sessionId = null;
+let es = null;
+let gameEnded = false;
+let pendingAction = null;  // for talk弹层
+
+// ─── 开始 ───────────────────────────────────────
+function startGame() {
+  document.getElementById('onboarding').style.display = 'none';
+  initGame();
+}
+
+async function initGame() {
+  try {
+    const r = await fetch('/api/session', {method:'POST'});
+    const d = await r.json();
+    sessionId = d.session_id;
+    updateState(d.state);
+    connectSSE(sessionId);
+    document.getElementById('connDot').classList.add('live');
+  } catch(e) {
+    log('system', '连接服务器失败: ' + e.message);
+  }
+}
+
+// ─── SSE ───────────────────────────────────────
+function connectSSE(sid) {
+  if (es) es.close();
+  es = new EventSource(`/api/stream/${sid}`);
+  es.addEventListener('connected', () => {
+    document.getElementById('connDot').classList.add('live');
+  });
+  es.addEventListener('narrator', e => streamNarrator(JSON.parse(e.data)));
+  es.addEventListener('npc_reply', e => streamNPCReply(JSON.parse(e.data)));
+  es.addEventListener('system', e => handleSystem(JSON.parse(e.data)));
+  es.addEventListener('game_over', e => showGameOver(JSON.parse(e.data)));
+  es.addEventListener('heartbeat', () => {});
+  es.onerror = () => {
+    document.getElementById('connDot').classList.remove('live');
+  };
+}
+
+// ─── 事件渲染 ─────────────────────────────────
+function streamNarrator(chunks) {
+  const el = document.createElement('div');
+  el.className = 'entry-narrator';
+  document.getElementById('logPanel').appendChild(el);
+  streamText(el, chunks);
+}
+
+function streamNPCReply(data) {
+  const npc = data.npc;
+  const cls = NPC_COLORS[npc] || '';
+  const w = document.createElement('div');
+  w.className = 'entry-dialogue';
+  w.innerHTML = `
+    <div class="avatar ${cls}">${AVATAR_LETTER[npc] || npc[0]}</div>
+    <div class="bubble"><div class="speaker-name">${npc}</div></div>`;
+  document.getElementById('logPanel').appendChild(w);
+  const bubble = w.querySelector('.bubble');
+  streamText(bubble, data.text);
+  scroll();
+}
+
+function streamText(el, chunks) {
+  let i = 0;
+  const cur = document.createElement('span');
+  cur.className = 'typing-cursor';
+  el.appendChild(cur);
+  function next() {
+    if (i < chunks.length) {
+      el.insertBefore(document.createTextNode(chunks[i]), cur);
+      i++; scroll();
+      setTimeout(next, 55 + Math.random() * 50);
+    } else {
+      cur.remove();
+    }
+  }
+  next();
+}
+
+function handleSystem(data) {
+  if (data.type === 'game_over') { showGameOver(data); return; }
+  if (data.type === 'clock') {
+    log('system', data.text);
+    return;
+  }
+  if (data.type === 'location') {
+    // 场景切换 → 闪白
+    showFlash(data.text.split('\n')[0]);
+    return;
+  }
+  const cls = ['phase-hint','npc_action','npc_decision','linwan_alert','accusation','boat_arrived'].includes(data.type)
+    ? 'system phase-hint' : 'system';
+  log(cls, data.text || JSON.stringify(data));
+}
+
+function showGameOver(d) {
+  const el = document.getElementById('go-summary');
+  el.textContent = '';
+  document.getElementById('go-verdict').textContent = d.verdict || '';
+  document.getElementById('gameover').classList.add('show');
+  gameEnded = true;
+  // 打字机效果显示结局
+  const full = (d.summary || '') +
+    '\n\n真凶: ' + (d.culprit || '?') +
+    (d.innocent && d.innocent.length ? '\n无辜: ' + d.innocent.join('、') : '');
+  streamText(el, [full]);
+}
+
+function restartGame() {
+  document.getElementById('gameover').classList.remove('show');
+  document.getElementById('logPanel').innerHTML = '';
+  gameEnded = false;
+  if (es) { es.close(); es = null; }
+  initGame();
+}
+
+// ─── 场景转场 ─────────────────────────────────
+function showFlash(text) {
+  const flash = document.getElementById('scene-flash');
+  document.getElementById('flash-text').textContent = text;
+  flash.classList.add('active');
+  setTimeout(() => {
+    flash.classList.remove('active');
+  }, 1200);
+}
+
+// ─── 动作按钮区 ────────────────────────────────
+function renderActions(actions) {
+  const container = document.getElementById('actionGroups');
+  container.innerHTML = '';
+
+  // 分组
+  const talk = actions.filter(a => a.type === 'talk');
+  const move = actions.filter(a => a.type === 'move');
+  const other = actions.filter(a => !['talk','move'].includes(a.type));
+
+  function makeGroup(label, items) {
+    if (!items.length) return;
+    const group = document.createElement('div');
+    group.className = 'action-group';
+
+    const lbl = document.createElement('span');
+    lbl.className = 'action-group-label';
+    lbl.textContent = label;
+    group.appendChild(lbl);
+
+    for (const a of items) {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn' + (a.enabled ? '' : ' disabled');
+      btn.textContent = a.label;
+      btn.disabled = !a.enabled;
+      if (!a.enabled && a.hint) btn.title = a.hint;
+      btn.onclick = () => doAction(a);
+      group.appendChild(btn);
+    }
+    container.appendChild(group);
+  }
+
+  makeGroup('盘问', talk);
+  makeGroup('移动', move);
+  makeGroup('其他', other);
+}
+
+// ─── 执行动作 ─────────────────────────────────
+async function doAction(a) {
+  if (gameEnded) { restartGame(); return; }
+
+  if (a.type === 'talk') {
+    const text = await askQuestion(a.target);
+    if (text === null) return;
+    await executeAction(a.type, a.target, text);
+  } else {
+    await executeAction(a.type, a.target, null);
+  }
+}
+
+async function executeAction(type, target, text) {
+  // 先显示玩家自己的话（仅对话）
+  if (type === 'talk' && text) {
+    appendPlayerBubble(text);
+  }
+  // 移动时的场景闪现
+  if (type === 'move' && target) {
+    showFlash('前往 ' + target);
+  }
+
+  try {
+    const r = await fetch('/api/action', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: sessionId, type, target, text})
+    });
+    const d = await r.json();
+    if (!d.ok) {
+      log('system', d.error || '动作失败');
+    } else {
+      renderEvents(d.events);     // 渲染对话/旁白/系统消息（单一渲染路径）
+    }
+    if (d.state) updateState(d.state);
+  } catch(e) {
+    log('system', '发送失败: ' + e.message);
+  }
+}
+
+// ─── 渲染 dispatch 返回的 events ──────────────────
+// 每条 ev = {kind, speaker, text}，kind ∈ npc|narrator|system|investigate|clock|game_over
+function renderEvents(events) {
+  if (!events || !events.length) return;
+  for (const ev of events) {
+    const kind = ev.kind;
+    const text = ev.text || '';
+    if (kind === 'npc') {
+      appendNPCBubble(ev.speaker, text);
+    } else if (kind === 'narrator') {
+      const el = document.createElement('div');
+      el.className = 'entry-narrator';
+      document.getElementById('logPanel').appendChild(el);
+      streamText(el, text);
+    } else if (kind === 'game_over') {
+      log('system phase-hint', text);
+      document.getElementById('go-verdict').textContent = '';
+      const sum = document.getElementById('go-summary');
+      sum.textContent = text;
+      document.getElementById('gameover').classList.add('show');
+      gameEnded = true;
+    } else {
+      // system / investigate / clock
+      log('system', text);
+    }
+  }
+}
+
+// NPC 气泡（接收纯字符串 text，streamText 会逐字打出）
+function appendNPCBubble(npc, text) {
+  const cls = NPC_COLORS[npc] || '';
+  const w = document.createElement('div');
+  w.className = 'entry-dialogue';
+  w.innerHTML = `
+    <div class="avatar ${cls}">${AVATAR_LETTER[npc] || (npc ? npc[0] : '?')}</div>
+    <div class="bubble"><div class="speaker-name">${npc || ''}</div></div>`;
+  document.getElementById('logPanel').appendChild(w);
+  streamText(w.querySelector('.bubble'), text);
+  scroll();
+}
+
+// ─── 对话弹层 ─────────────────────────────────
+function askQuestion(npcName) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('talk-overlay');
+    const title = document.getElementById('talk-title');
+    const presets = document.getElementById('preset-list');
+    const input = document.getElementById('talk-input');
+
+    title.textContent = '盘问 ' + npcName;
+    input.value = '';
+
+    // 预设问题
+    presets.innerHTML = '';
+    (PRESETS[npcName] || []).forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      btn.textContent = q;
+      btn.onclick = () => { input.value = q; };
+      presets.appendChild(btn);
+    });
+
+    overlay.classList.add('show');
+    input.focus();
+
+    function cleanup() {
+      overlay.classList.remove('show');
+      document.getElementById('talk-send').onclick = handler;
+      document.getElementById('talk-cancel').onclick = cancelHandler;
+    }
+
+    function handler() {
+      const val = input.value.trim();
+      cleanup();
+      resolve(val || null);
+    }
+    function cancelHandler() {
+      cleanup();
+      resolve(null);
+    }
+
+    document.getElementById('talk-send').onclick = handler;
+    document.getElementById('talk-cancel').onclick = cancelHandler;
+    input.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handler(); } };
+  });
+}
+
+// ─── 状态同步 ─────────────────────────────────
+function updateState(s) {
+  if (!s) return;
+
+  document.getElementById('clockLabel').textContent = s.clock_name || '—';
+  document.getElementById('phaseBadge').textContent = PHASE_NAME[s.phase] || s.phase || '—';
+  document.getElementById('s-clock').textContent = s.clock_name || '—';
+  document.getElementById('s-phase').textContent = PHASE_NAME[s.phase] || s.phase || '—';
+  document.getElementById('s-location').textContent = s.player_location || '—';
+  document.getElementById('s-talked').textContent = (s.talked_npcs || []).length;
+  document.getElementById('s-evcount').textContent = (s.inventory || []).length;
+
+  const inv = s.inventory || [];
+  document.getElementById('s-evidence').innerHTML = inv.length
+    ? inv.map(e => `<span class="etag">${e}</span>`).join('')
+    : '<span style="color:var(--muted);font-size:11px">暂无</span>';
+
+  const locs = s.npc_locations || {};
+  document.getElementById('s-npcs').innerHTML = Object.entries(locs)
+    .map(([n,l]) => `<div class="npc-pos-item"><span>${n}</span><span style="color:var(--muted)">${l}</span></div>`)
+    .join('') || '<div style="color:var(--muted);font-size:11px">—</div>';
+
+  // 刷新动作按钮
+  if (s.available_actions) {
+    renderActions(s.available_actions);
+  }
+}
+
+// ─── 工具 ─────────────────────────────────────
+function appendPlayerBubble(text) {
+  const w = document.createElement('div');
+  w.className = 'entry-dialogue player';
+  w.innerHTML = `
+    <div class="avatar player-avatar">侦</div>
+    <div class="bubble"><div class="speaker-name player-label">侦探</div></div>`;
+  const bubble = w.querySelector('.bubble');
+  bubble.appendChild(document.createTextNode(text));
+  document.getElementById('logPanel').appendChild(w);
+  scroll();
+}
+
+function log(cls, text) {
+  const el = document.createElement('div');
+  el.className = cls;
+  el.textContent = text;
+  document.getElementById('logPanel').appendChild(el);
+  scroll();
+}
+
+function scroll() {
+  const p = document.getElementById('logPanel');
+  p.scrollTop = p.scrollHeight;
+}
+</script>
+</body>
+</html>
