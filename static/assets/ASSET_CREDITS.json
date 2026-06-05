@@ -1,0 +1,47 @@
+{
+  "pack_version": 1,
+  "pack_name": "首批项目生成素材包",
+  "description": "第一批接入项目的真实视觉资源，来源为项目 AI 资产生成流程",
+  "assets": [
+    {
+      "file": "static/assets/scenes/scene_hall_v1.webp",
+      "name": "古堡大厅背景图",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/scenes/scene_study_v1.webp",
+      "name": "周慎之书房背景图",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/characters/char_linwan_v1.webp",
+      "name": "林婉立绘",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/characters/char_chenbo_v1.webp",
+      "name": "陈伯立绘",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/evidence/ev_teacup_v1.webp",
+      "name": "异常茶杯残留图标",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    }
+  ]
+}
