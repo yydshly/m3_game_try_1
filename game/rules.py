@@ -159,6 +159,30 @@ KEY_EVIDENCE: set[str] = {
     "厨师阿福的证词",
 }
 
+# 证据元数据（UI展示用，不影响游戏规则）
+EVIDENCE_METADATA: dict[str, dict] = {
+    "异常的茶杯残留": {"source": "书房", "points_to": "投毒", "level": "关键", "icon": "🧪"},
+    "新遗嘱草稿":   {"source": "书房", "points_to": "动机", "level": "重要", "icon": "📄"},
+    "林婉的病历笔记": {"source": "林婉房间", "points_to": "知情", "level": "重要", "icon": "💊"},
+    "借据":         {"source": "书房", "points_to": "动机", "level": "线索", "icon": "📋"},
+    "厨师阿福的证词": {"source": "厨房", "points_to": "女性凶手", "level": "线索", "icon": "🍳"},
+}
+
+# 地点主题（UI 场景配色用）
+LOCATION_THEMES: dict[str, dict] = {
+    "大厅":    {"theme": "hall",    "mood": "庄重", "color": "#c9a227"},
+    "书房":    {"theme": "study",   "mood": "压抑", "color": "#b87333"},
+    "厨房":    {"theme": "kitchen", "mood": "紧张", "color": "#4a7c59"},
+    "餐厅":    {"theme": "dining",   "mood": "混乱", "color": "#8b3a3a"},
+    "保安室":  {"theme": "security", "mood": "冷寂", "color": "#3a5a8b"},
+    "走廊":    {"theme": "corridor", "mood": "空旷", "color": "#5a5a6e"},
+    "陈伯房间":  {"theme": "room",    "mood": "简朴", "color": "#7a6a3a"},
+    "苏苏房间":  {"theme": "room",    "mood": "私密", "color": "#7a3a6a"},
+    "林婉房间":  {"theme": "room",    "mood": "消毒感", "color": "#3a6a7a"},
+    "王总房间":  {"theme": "room",    "mood": "商务感", "color": "#3a4a7a"},
+    "自己房间":  {"theme": "room",    "mood": "临时感", "color": "#4a5a5a"},
+}
+
 # 地点场景描写(规则层,不需要 M3)
 LOCATION_DESCRIPTIONS: dict[str, str] = {
     "大厅": "古堡大厅,水晶吊灯发出昏黄的光。窗外暴风雨呼啸,海浪拍打着礁石。",

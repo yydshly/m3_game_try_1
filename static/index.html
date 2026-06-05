@@ -21,15 +21,19 @@
   --system: #8b6fdb;
   --danger: #d94040;
   --success: #3da84f;
-  --danger-dim: rgba(217,64,64,0.12);
-
-  /* NPC colors */
-  --chenbo: #e3b341;
-  --linwan: #d84141;
-  --susu: #db61a2;
-  --wangzong: #79c0ff;
-  --afu: #3da84f;
-  --xiaozhang: #ffa657;
+  --chenbo: #c8963a;
+  --linwan: #c04040;
+  --susu: #c05090;
+  --wangzong: #5090d0;
+  --afu: #40a060;
+  --xiaozhang: #d08030;
+  --study-bg: rgba(184,115,51,0.06);
+  --kitchen-bg: rgba(74,124,89,0.06);
+  --dining-bg: rgba(139,58,58,0.06);
+  --security-bg: rgba(58,90,139,0.06);
+  --corridor-bg: rgba(90,90,110,0.05);
+  --room-bg: rgba(80,80,100,0.05);
+  --hall-bg: rgba(201,162,39,0.05);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,43 +48,35 @@ body {
   overflow: hidden;
 }
 
-/* ─── HEADER ─────────────────────────────────── */
+/* ── HEADER ─────────────────────────────── */
 header {
-  background: linear-gradient(180deg, rgba(15,21,32,0.98) 0%, rgba(15,21,32,0.85) 100%);
+  background: rgba(10,14,22,0.98);
   border-bottom: 1px solid var(--border);
   padding: 0 20px;
-  height: 54px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: relative;
-  z-index: 20;
   flex-shrink: 0;
+  z-index: 20;
+  position: relative;
 }
 
-.header-title {
-  font-size: 15px;
+.hd-title {
+  font-size: 14px;
   color: var(--gold);
   letter-spacing: 6px;
-  font-weight: 400;
-  text-shadow: 0 0 20px rgba(201,162,39,0.3);
+  text-shadow: 0 0 20px rgba(201,162,39,0.25);
 }
 
-.header-meta {
+.hd-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.hm-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  color: var(--muted);
-}
-
-.hm-label { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+.hm-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.hm-label { font-size: 10px; letter-spacing: 1px; }
 .hm-value { color: var(--text); font-weight: 500; }
 
 .phase-badge {
@@ -89,97 +85,159 @@ header {
   border-radius: 10px;
   padding: 3px 10px;
   color: var(--gold);
-  font-size: 10.5px;
+  font-size: 10px;
   letter-spacing: 1.5px;
 }
 
-.conn-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--muted);
-  flex-shrink: 0;
-}
+.phase-badge.confrontation { border-color: rgba(217,64,64,0.4); color: var(--danger); }
+
+.conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .conn-dot.live { background: var(--success); box-shadow: 0 0 6px var(--success); }
 
-/* ─── MAIN LAYOUT ──────────────────────────────── */
+/* ── TIMELINE BAR ────────────────────── */
+.timeline-bar {
+  background: rgba(10,14,22,0.92);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.tl-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
+
+.tl-clock {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tl-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  background: transparent;
+  transition: all 0.3s;
+}
+.tl-dot.passed { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 5px rgba(201,162,39,0.4); }
+.tl-dot.current { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 6px rgba(217,64,64,0.5); animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.tl-phase-track { display: flex; gap: 8px; align-items: center; }
+.tl-phase-badge {
+  font-size: 9.5px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  background: var(--surface);
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+.tl-phase-badge.active { border-color: var(--gold); color: var(--gold); background: rgba(201,162,39,0.08); }
+.tl-phase-badge.done { opacity: 0.5; }
+
+.tl-events { margin-left: auto; font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ── MAIN LAYOUT ────────────────────── */
 .game-layout {
   display: flex;
   flex: 1;
   overflow: hidden;
-  position: relative;
-  z-index: 1;
 }
 
-/* ─── LEFT: SCENE STAGE ──────────────────────── */
+/* ── LEFT: SCENE STAGE ────────────── */
 .scene-stage {
-  width: 240px;
+  width: 230px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: background 0.4s;
 }
 
-.scene-location-card {
-  padding: 16px;
+[data-theme="hall"]    { background: linear-gradient(160deg, rgba(201,162,39,0.08) 0%, var(--surface) 50%); }
+[data-theme="study"]   { background: linear-gradient(160deg, rgba(184,115,51,0.10) 0%, var(--surface) 50%); }
+[data-theme="kitchen"] { background: linear-gradient(160deg, rgba(74,124,89,0.10) 0%, var(--surface) 50%); }
+[data-theme="dining"]  { background: linear-gradient(160deg, rgba(139,58,58,0.10) 0%, var(--surface) 50%); }
+[data-theme="security"] { background: linear-gradient(160deg, rgba(58,90,139,0.10) 0%, var(--surface) 50%); }
+[data-theme="corridor"] { background: linear-gradient(160deg, rgba(90,90,110,0.08) 0%, var(--surface) 50%); }
+[data-theme="room"]    { background: linear-gradient(160deg, rgba(80,80,100,0.08) 0%, var(--surface) 50%); }
+
+.scene-loc-card {
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(135deg, rgba(201,162,39,0.06) 0%, transparent 60%);
+  position: relative;
+  overflow: hidden;
 }
 
-.location-name {
-  font-size: 15px;
+.scene-loc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--loc-color, var(--gold));
+  opacity: 0.6;
+}
+
+.loc-name {
+  font-size: 14px;
   color: var(--gold);
   letter-spacing: 3px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
-
-.location-desc {
-  font-size: 11px;
+.loc-mood {
+  font-size: 10px;
   color: var(--muted);
-  line-height: 1.7;
-  font-style: italic;
+  letter-spacing: 1px;
 }
 
 .scene-divider {
-  padding: 8px 16px;
-  font-size: 9.5px;
+  padding: 6px 14px;
+  font-size: 9px;
   color: var(--muted);
   letter-spacing: 2px;
   background: rgba(0,0,0,0.2);
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .npc-list {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
+/* NPC CARD */
 .npc-card {
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   transition: all 0.2s;
-  cursor: default;
+  position: relative;
+  overflow: hidden;
 }
 
 .npc-card.here {
   border-color: rgba(201,162,39,0.4);
-  background: rgba(201,162,39,0.06);
+  background: rgba(201,162,39,0.07);
 }
-
-.npc-card.talked {
-  border-color: rgba(93,164,196,0.3);
+.npc-card.here::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--gold);
 }
-
-.npc-card-absent {
-  opacity: 0.45;
-}
+.npc-card.talked { border-color: rgba(93,164,196,0.3); }
+.npc-card.absent { opacity: 0.45; }
 
 .npc-top {
   display: flex;
@@ -191,60 +249,52 @@ header {
 .npc-avatar {
   width: 32px; height: 32px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: bold;
   flex-shrink: 0;
   border: 1px solid;
 }
 
 .npc-info { flex: 1; min-width: 0; }
-.npc-name { font-size: 12.5px; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.npc-role { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.npc-status { font-size: 9.5px; margin-top: 2px; }
-.npc-here-badge {
-  font-size: 9px;
-  background: rgba(201,162,39,0.15);
-  color: var(--gold);
-  border: 1px solid rgba(201,162,39,0.3);
-  border-radius: 4px;
-  padding: 1px 5px;
-  letter-spacing: 0.5px;
+.npc-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.npc-role { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+.npc-badges { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px; }
+.badge-here {
+  font-size: 8.5px; background: rgba(201,162,39,0.15); color: var(--gold);
+  border: 1px solid rgba(201,162,39,0.3); border-radius: 3px; padding: 1px 4px; letter-spacing: 0.3px;
 }
-.npc-talked-badge {
-  font-size: 9px;
-  background: rgba(93,164,196,0.1);
-  color: var(--narrator);
-  border: 1px solid rgba(93,164,196,0.25);
-  border-radius: 4px;
-  padding: 1px 5px;
+.badge-talked {
+  font-size: 8.5px; background: rgba(93,164,196,0.1); color: var(--narrator);
+  border: 1px solid rgba(93,164,196,0.25); border-radius: 3px; padding: 1px 4px;
 }
-.npc-absent-label {
-  font-size: 9.5px;
-  color: var(--muted);
-  opacity: 0.6;
+.badge-dead {
+  font-size: 8.5px; background: rgba(217,64,64,0.1); color: var(--danger);
+  border: 1px solid rgba(217,64,64,0.25); border-radius: 3px; padding: 1px 4px;
 }
 
+.npc-absent-loc { font-size: 9.5px; color: var(--muted); margin-top: 3px; }
+
+/* suspicion bar */
+.npc-suspicion { margin-top: 5px; }
+.suspicion-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+.suspicion-bar-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.suspicion-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
 .npc-talk-btn {
-  width: 100%;
-  margin-top: 7px;
+  width: 100%; margin-top: 7px;
   background: rgba(201,162,39,0.08);
   border: 1px solid rgba(201,162,39,0.25);
   border-radius: 5px;
   color: var(--gold);
-  font-size: 11px;
-  padding: 5px 8px;
-  cursor: pointer;
-  font-family: inherit;
-  letter-spacing: 0.5px;
+  font-size: 11px; padding: 5px 8px;
+  cursor: pointer; font-family: inherit; letter-spacing: 0.5px;
   transition: all 0.15s;
 }
-.npc-talk-btn:hover { background: rgba(201,162,39,0.16); border-color: var(--gold); }
+.npc-talk-btn:hover:not(:disabled) { background: rgba(201,162,39,0.16); border-color: var(--gold); }
 .npc-talk-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* ─── CENTER: STORY LOG ──────────────────────── */
+/* ── CENTER: STORY LOG ─────────────── */
 .story-panel {
   flex: 1;
   display: flex;
@@ -256,13 +306,12 @@ header {
 .story-log {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px 80px;
+  padding: 14px 18px 80px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
-/* entry types */
 .entry-narrator {
   margin: 10px 0;
   padding: 10px 14px 10px 16px;
@@ -277,12 +326,11 @@ header {
 
 .entry-system {
   color: var(--system);
-  font-size: 11.5px;
-  padding: 4px 2px;
-  opacity: 0.8;
+  font-size: 11px;
+  padding: 3px 2px 3px 10px;
   border-left: 2px solid rgba(139,111,219,0.3);
-  padding-left: 10px;
-  margin: 4px 0;
+  margin: 3px 0;
+  opacity: 0.85;
 }
 
 .entry-investigate {
@@ -298,100 +346,41 @@ header {
 .entry-clock {
   text-align: center;
   color: var(--gold);
-  font-size: 11px;
+  font-size: 10.5px;
   letter-spacing: 2px;
-  padding: 6px 0;
-  opacity: 0.7;
+  padding: 5px 0;
+  opacity: 0.65;
 }
 
 .entry-gameover {
-  background: rgba(201,162,39,0.08);
-  border: 1px solid rgba(201,162,39,0.3);
+  background: rgba(201,162,39,0.07);
+  border: 1px solid rgba(201,162,39,0.28);
   border-radius: 8px;
   padding: 16px;
   text-align: center;
   margin: 8px 0;
 }
-
-.entry-gameover .go-verdict {
-  color: var(--gold);
-  font-size: 13px;
-  letter-spacing: 3px;
-  margin-bottom: 8px;
-}
-
-.entry-gameover .go-summary {
-  color: var(--muted);
-  font-size: 11.5px;
-  line-height: 1.8;
-  text-align: left;
-  white-space: pre-wrap;
-}
+.go-verdict { color: var(--gold); font-size: 13px; letter-spacing: 3px; margin-bottom: 8px; }
+.go-summary { color: var(--muted); font-size: 11.5px; line-height: 1.8; text-align: left; white-space: pre-wrap; }
 
 /* dialogue */
-.entry-dialogue {
-  display: flex;
-  gap: 10px;
-  margin: 6px 0;
-  align-items: flex-start;
-}
+.entry-dialogue { display: flex; gap: 10px; margin: 5px 0; align-items: flex-start; }
 .entry-dialogue.player { flex-direction: row-reverse; }
-
-.avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  flex-shrink: 0;
-  border: 1px solid;
-}
-
-.bubble {
-  max-width: 65%;
-  padding: 9px 13px;
-  border-radius: 12px;
-  font-size: 13px;
-  line-height: 1.7;
-}
-.entry-dialogue:not(.player) .bubble {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 2px 12px 12px 12px;
-}
-.entry-dialogue.player .bubble {
-  background: rgba(201,162,39,0.1);
-  border: 1px solid rgba(201,162,39,0.2);
-  border-radius: 12px 2px 12px 12px;
-  color: var(--text);
-}
-.speaker-name {
-  font-size: 10px;
-  color: var(--muted);
-  margin-bottom: 3px;
-  letter-spacing: 1px;
-}
+.avatar { width: 33px; height: 33px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; border: 1px solid; }
+.bubble { max-width: 64%; padding: 9px 13px; border-radius: 12px; font-size: 13px; line-height: 1.7; }
+.entry-dialogue:not(.player) .bubble { background: var(--surface2); border: 1px solid var(--border); border-radius: 2px 12px 12px 12px; }
+.entry-dialogue.player .bubble { background: rgba(201,162,39,0.09); border: 1px solid rgba(201,162,39,0.2); border-radius: 12px 2px 12px 12px; }
+.speaker-name { font-size: 10px; color: var(--muted); margin-bottom: 3px; letter-spacing: 1px; }
 .player-label { color: var(--gold) !important; }
-
-.typing-cursor {
-  display: inline-block;
-  width: 2px; height: 13px;
-  background: var(--gold);
-  vertical-align: middle;
-  animation: blink 0.7s step-end infinite;
-  margin-left: 2px;
-}
+.typing-cursor { display: inline-block; width: 2px; height: 13px; background: var(--gold); vertical-align: middle; animation: blink 0.7s step-end infinite; margin-left: 2px; }
 @keyframes blink { 50% { opacity: 0; } }
-
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* ─── RIGHT SIDEBAR ─────────────────────────── */
+/* ── RIGHT SIDEBAR ──────────────── */
 .right-sidebar {
-  width: 250px;
+  width: 244px;
   flex-shrink: 0;
   background: var(--surface);
   border-left: 1px solid var(--border);
@@ -400,94 +389,69 @@ header {
   overflow: hidden;
 }
 
-.sidebar-section {
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-}
+.sidebar-section { border-bottom: 1px solid var(--border); display: flex; flex-direction: column; }
+.sidebar-section.flexible { flex: 1; overflow: hidden; }
 
 .sidebar-title {
-  padding: 8px 14px;
+  padding: 7px 13px;
   background: rgba(201,162,39,0.06);
   color: var(--gold);
-  font-size: 9.5px;
+  font-size: 9px;
   letter-spacing: 2px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
-.sidebar-body {
-  padding: 10px 14px;
-  flex: 1;
-  overflow-y: auto;
-}
+.sidebar-body { padding: 10px 13px; flex: 1; overflow-y: auto; }
 
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11.5px;
-  padding: 3px 0;
-}
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 11.5px; }
 .stat-label { color: var(--muted); }
 .stat-value { color: var(--text); font-weight: 500; }
 
-.evidence-tags {
+/* evidence cards */
+.evidence-cards { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.ev-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 10px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
+  align-items: flex-start;
+  gap: 8px;
+  transition: border-color 0.15s;
 }
-.etag {
-  background: rgba(93,164,196,0.1);
-  border: 1px solid rgba(93,164,196,0.25);
-  color: var(--narrator);
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 11px;
+.ev-card:hover { border-color: rgba(93,164,196,0.4); }
+.ev-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.ev-info { flex: 1; min-width: 0; }
+.ev-name { font-size: 11.5px; color: var(--text); font-weight: 500; }
+.ev-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.ev-level {
+  font-size: 9px; padding: 1px 5px; border-radius: 3px;
+  border: 1px solid;
 }
-.etag-empty { color: var(--muted); font-size: 11px; font-style: italic; }
+.ev-level.critical { color: var(--danger); border-color: rgba(217,64,64,0.3); background: rgba(217,64,64,0.08); }
+.ev-level.important { color: var(--gold); border-color: rgba(201,162,39,0.3); background: rgba(201,162,39,0.08); }
+.ev-level.normal { color: var(--muted); border-color: var(--border); background: transparent; }
+.ev-empty { font-size: 11px; color: var(--muted); font-style: italic; line-height: 1.7; }
 
-.event-item {
-  font-size: 11px;
-  color: var(--muted);
-  padding: 3px 0;
-  border-bottom: 1px solid rgba(30,45,66,0.6);
-  line-height: 1.5;
-}
+/* events */
+.event-list { display: flex; flex-direction: column; gap: 4px; }
+.event-item { font-size: 10.5px; color: var(--muted); padding: 3px 0; border-bottom: 1px solid rgba(30,45,66,0.6); line-height: 1.5; }
 .event-item:last-child { border-bottom: none; }
+.ev-empty-small { font-size: 10.5px; color: var(--muted); font-style: italic; }
 
-/* ─── ACTION BAR ─────────────────────────────── */
+/* ── ACTION BAR ─────────────────── */
 .action-bar {
-  background: linear-gradient(0deg, rgba(15,21,32,0.98) 0%, rgba(15,21,32,0.9) 100%);
+  background: rgba(10,14,22,0.97);
   border-top: 1px solid var(--border);
-  padding: 10px 20px 12px;
-  position: relative;
-  z-index: 10;
+  padding: 9px 18px 11px;
   flex-shrink: 0;
+  z-index: 10;
 }
 
-.action-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.action-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  align-items: center;
-}
-
-.action-group-label {
-  font-size: 9.5px;
-  color: var(--muted);
-  letter-spacing: 1.5px;
-  margin-right: 3px;
-  white-space: nowrap;
-  min-width: 32px;
-}
+.action-groups { display: flex; flex-direction: column; gap: 5px; }
+.action-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.action-group-label { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; margin-right: 2px; white-space: nowrap; min-width: 28px; }
 
 .action-btn {
   background: var(--surface2);
@@ -495,7 +459,7 @@ header {
   color: var(--text);
   border-radius: 6px;
   padding: 5px 13px;
-  font-size: 12px;
+  font-size: 11.5px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
@@ -507,12 +471,10 @@ header {
   background: rgba(201,162,39,0.08);
   box-shadow: 0 0 8px rgba(201,162,39,0.1);
 }
-.action-btn:disabled, .action-btn.disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
+.action-btn:disabled, .action-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+.action-btn.loading { opacity: 0.6; cursor: wait; }
 
-/* ─── TALK MODAL ─────────────────────────────── */
+/* ── TALK MODAL ─────────────────── */
 #talk-overlay {
   display: none;
   position: fixed;
@@ -528,232 +490,98 @@ header {
   background: var(--surface);
   border: 1px solid rgba(201,162,39,0.3);
   border-radius: 10px;
-  padding: 28px 32px;
+  padding: 28px 30px;
   width: 400px;
   max-width: 90vw;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(201,162,39,0.05);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 40px rgba(201,162,39,0.04);
 }
-.talk-npc-avatar {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
-  margin: 0 auto 10px;
-  border: 1px solid;
+.talk-avatar {
+  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: bold; margin: 0 auto 8px; border: 1px solid;
 }
-.talk-title {
-  text-align: center;
-  color: var(--gold);
-  font-size: 14px;
-  letter-spacing: 3px;
-  margin-bottom: 6px;
-}
-.talk-role {
-  text-align: center;
-  color: var(--muted);
-  font-size: 11px;
-  margin-bottom: 16px;
-}
-.preset-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-}
+.talk-title { text-align: center; color: var(--gold); font-size: 13.5px; letter-spacing: 3px; margin-bottom: 4px; }
+.talk-role { text-align: center; color: var(--muted); font-size: 10.5px; margin-bottom: 16px; }
+.preset-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 11px; }
 .preset-btn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 11px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.15s;
 }
 .preset-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 #talk-input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-size: 12.5px;
-  padding: 9px 12px;
-  font-family: inherit;
-  outline: none;
-  resize: none;
-  box-sizing: border-box;
-  line-height: 1.6;
+  width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 12.5px; padding: 9px 12px; font-family: inherit; outline: none;
+  resize: none; box-sizing: border-box; line-height: 1.6;
 }
 #talk-input:focus { border-color: var(--gold-dim); }
-.talk-btns { display: flex; gap: 8px; margin-top: 12px; }
+.talk-btns { display: flex; gap: 8px; margin-top: 11px; }
 .talk-btns button { flex: 1; padding: 8px; border-radius: 6px; border: none; font-size: 12.5px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 1px; transition: background 0.2s; }
 #talk-send { background: var(--gold-dim); color: var(--bg); }
 #talk-send:hover { background: var(--gold); }
 #talk-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); }
 #talk-cancel:hover { border-color: var(--muted); color: var(--text); }
 
-/* ─── ONBOARDING ─────────────────────────────── */
+/* ── ONBOARDING ─────────────────── */
 #onboarding {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   background: rgba(8,12,20,0.96);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   z-index: 200;
 }
 #onboarding .card {
-  background: var(--surface);
-  border: 1px solid rgba(201,162,39,0.25);
-  border-radius: 12px;
-  padding: 40px 48px;
-  max-width: 460px;
-  text-align: center;
-  box-shadow: 0 0 80px rgba(201,162,39,0.06);
+  background: var(--surface); border: 1px solid rgba(201,162,39,0.22);
+  border-radius: 12px; padding: 40px 46px; max-width: 450px; text-align: center;
+  box-shadow: 0 0 80px rgba(201,162,39,0.05);
 }
-#onboarding h2 {
-  color: var(--gold);
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 8px;
-  margin-bottom: 18px;
-  text-shadow: 0 0 30px rgba(201,162,39,0.2);
-}
-#onboarding p {
-  color: var(--muted);
-  font-size: 12.5px;
-  line-height: 1.9;
-  margin-bottom: 24px;
-}
+#onboarding h2 { color: var(--gold); font-size: 20px; font-weight: 400; letter-spacing: 8px; margin-bottom: 16px; text-shadow: 0 0 30px rgba(201,162,39,0.2); }
+#onboarding p { color: var(--muted); font-size: 12.5px; line-height: 1.9; margin-bottom: 22px; }
 #onboarding .hint {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 18px;
-  text-align: left;
-  margin-bottom: 24px;
-  font-size: 12px;
-  line-height: 2;
-  color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 18px; text-align: left; margin-bottom: 22px; font-size: 12px; line-height: 2; color: var(--muted);
 }
 #onboarding .hint span { color: var(--gold); font-family: monospace; }
 #onboarding button {
-  background: var(--gold-dim);
-  color: var(--bg);
-  border: none;
-  border-radius: 6px;
-  padding: 11px 36px;
-  font-size: 13.5px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: bold;
-  letter-spacing: 3px;
-  transition: background 0.2s;
+  background: var(--gold-dim); color: var(--bg); border: none; border-radius: 6px;
+  padding: 11px 36px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: bold;
+  letter-spacing: 3px; transition: background 0.2s;
 }
 #onboarding button:hover { background: var(--gold); }
 
-/* ─── GAME OVER ──────────────────────────────── */
-#gameover {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(8,12,20,0.92);
-  align-items: center;
-  justify-content: center;
-  z-index: 300;
-}
+/* ── GAME OVER ─────────────────── */
+#gameover { display: none; position: fixed; inset: 0; background: rgba(8,12,20,0.93); align-items: center; justify-content: center; z-index: 300; }
 #gameover.show { display: flex; }
 #gameover .card {
-  background: var(--surface);
-  border: 1px solid var(--gold-dim);
-  border-radius: 12px;
-  padding: 40px;
-  max-width: 520px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 0 60px rgba(201,162,39,0.08);
+  background: var(--surface); border: 1px solid var(--gold-dim); border-radius: 12px;
+  padding: 38px 40px; max-width: 520px; width: 90%; text-align: center;
+  box-shadow: 0 0 60px rgba(201,162,39,0.07);
 }
-#gameover h2 {
-  color: var(--gold);
-  font-size: 18px;
-  letter-spacing: 4px;
-  margin-bottom: 12px;
-}
-#gameover .verdict {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  margin-bottom: 20px;
-}
-#gameover .summary {
-  color: var(--text);
-  font-size: 13px;
-  line-height: 1.9;
-  margin-bottom: 24px;
-  white-space: pre-wrap;
-  text-align: left;
-}
-#gameover button {
-  background: var(--gold-dim);
-  color: var(--bg);
-  border: none;
-  border-radius: 6px;
-  padding: 10px 32px;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: bold;
-  letter-spacing: 2px;
-  transition: background 0.2s;
-}
+#gameover h2 { color: var(--gold); font-size: 17px; letter-spacing: 4px; margin-bottom: 12px; }
+#gameover .verdict { font-size: 10.5px; color: var(--muted); letter-spacing: 2px; margin-bottom: 18px; }
+#gameover .summary { color: var(--text); font-size: 12.5px; line-height: 1.9; margin-bottom: 24px; white-space: pre-wrap; text-align: left; }
+#gameover button { background: var(--gold-dim); color: var(--bg); border: none; border-radius: 6px; padding: 10px 32px; font-size: 12.5px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 2px; transition: background 0.2s; }
 #gameover button:hover { background: var(--gold); }
 
-/* ─── SCENE FLASH ─────────────────────────────── */
-#scene-flash {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s;
-}
+/* ── SCENE FLASH ───────────────── */
+#scene-flash { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.35s; }
 #scene-flash.active { opacity: 1; pointer-events: all; }
-#scene-flash .flash-text {
-  color: var(--gold);
-  font-size: 15px;
-  letter-spacing: 4px;
-  opacity: 0;
-  transition: opacity 0.3s 0.15s;
-}
+#scene-flash .flash-text { color: var(--gold); font-size: 15px; letter-spacing: 4px; opacity: 0; transition: opacity 0.3s 0.15s; }
 #scene-flash.active .flash-text { opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- ONBOARDING -->
 <div id="onboarding">
   <div class="card">
     <h2>孤岛晚宴</h2>
     <p>暴风雨困住了所有人。今晨，岛主周慎之被发现死在书房。<br>你是被请来的私人侦探，天亮之前，找出真凶。</p>
     <div class="hint">
       点击右侧<span>行动按钮</span>推进游戏<br>
-      点击<span>人物卡</span>开始盘问<br>
+      点击<span>人物卡</span>中的「盘问」开始对话<br>
       收集证据，追踪线索，在<span>对峙阶段</span>指认真凶
     </div>
     <button onclick="startGame()">开始调查</button>
   </div>
 </div>
 
-<!-- GAME OVER -->
 <div id="gameover">
   <div class="card">
     <h2 id="go-title">结局</h2>
@@ -763,15 +591,13 @@ header {
   </div>
 </div>
 
-<!-- SCENE FLASH -->
 <div id="scene-flash">
   <div class="flash-text" id="flash-text"></div>
 </div>
 
-<!-- TALK MODAL -->
 <div id="talk-overlay">
   <div class="talk-card">
-    <div class="talk-npc-avatar" id="talk-avatar"></div>
+    <div class="talk-avatar" id="talk-avatar"></div>
     <div class="talk-title" id="talk-title">盘问</div>
     <div class="talk-role" id="talk-role"></div>
     <div class="preset-list" id="preset-list"></div>
@@ -785,8 +611,8 @@ header {
 
 <!-- HEADER -->
 <header>
-  <div class="header-title">孤 岛 晚 宴</div>
-  <div class="header-meta">
+  <div class="hd-title">孤 岛 晚 宴</div>
+  <div class="hd-meta">
     <div class="hm-item"><span class="hm-label">时段</span><span class="hm-value" id="h-clock">—</span></div>
     <div class="phase-badge" id="h-phase">—</div>
     <div class="hm-item"><span class="hm-label">地点</span><span class="hm-value" id="h-location">—</span></div>
@@ -796,19 +622,25 @@ header {
   </div>
 </header>
 
+<!-- TIMELINE BAR -->
+<div class="timeline-bar" id="timeline-bar">
+  <span class="tl-label">时段</span>
+  <div class="tl-clock" id="tl-clock"></div>
+  <div class="tl-phase-track" id="tl-phases"></div>
+  <div class="tl-events" id="tl-events"></div>
+</div>
+
 <!-- MAIN LAYOUT -->
 <div class="game-layout">
 
   <!-- LEFT: SCENE STAGE -->
-  <div class="scene-stage">
-    <div class="scene-location-card">
-      <div class="location-name" id="sc-location">—</div>
-      <div class="location-desc" id="sc-desc">—</div>
+  <div class="scene-stage" id="scene-stage" data-theme="hall">
+    <div class="scene-loc-card">
+      <div class="loc-name" id="sc-loc-name">—</div>
+      <div class="loc-mood" id="sc-loc-mood">—</div>
     </div>
     <div class="scene-divider">在 场 人 物</div>
-    <div class="npc-list" id="npc-list">
-      <!-- NPC cards rendered by JS -->
-    </div>
+    <div class="npc-list" id="npc-list"></div>
   </div>
 
   <!-- CENTER: STORY LOG -->
@@ -816,7 +648,7 @@ header {
     <div class="story-log" id="story-log"></div>
   </div>
 
-  <!-- RIGHT SIDEBAR -->
+  <!-- RIGHT: SIDEBAR -->
   <div class="right-sidebar">
     <div class="sidebar-section" style="flex-shrink:0">
       <div class="sidebar-title">当前状态</div>
@@ -829,17 +661,15 @@ header {
 
     <div class="sidebar-section">
       <div class="sidebar-title">持有证据</div>
-      <div class="sidebar-body">
-        <div class="evidence-tags" id="s-evidence">
-          <span class="etag-empty">尚未获得证据</span>
-        </div>
+      <div class="sidebar-body" id="ev-container">
+        <div class="ev-empty">尚未获得证据。<br>移动到关键地点或盘问相关人物，可能发现新的线索。</div>
       </div>
     </div>
 
-    <div class="sidebar-section" style="flex:1;overflow:hidden">
+    <div class="sidebar-section flexible">
       <div class="sidebar-title">公共事件</div>
       <div class="sidebar-body" id="s-events">
-        <span class="etag-empty">暂无公共事件</span>
+        <div class="ev-empty-small">暂无公共事件</div>
       </div>
     </div>
   </div>
@@ -851,14 +681,14 @@ header {
 </div>
 
 <script>
-// ─── NPC 基础数据 ─────────────────────────────────────
-const NPC_META = {
-  '陈伯':  { cls:'chenbo',   color:'var(--chenbo)',   letter:'伯', role:'老管家' },
-  '林婉':  { cls:'linwan',   color:'var(--linwan)',   letter:'婉', role:'私人医生' },
-  '苏苏':  { cls:'susu',     color:'var(--susu)',     letter:'苏', role:'侄女' },
-  '王总':  { cls:'wangzong', color:'var(--wangzong)', letter:'王', role:'商业伙伴' },
-  '阿福':  { cls:'afu',      color:'var(--afu)',      letter:'福', role:'厨师' },
-  '小张':  { cls:'xiaozhang',color:'var(--xiaozhang)',letter:'张', role:'保安' },
+// ── NPC 角色配置 ───────────────────────────────
+const NPC = {
+  '陈伯':  { cls:'chenbo',   color:'var(--chenbo)',   letter:'伯', role:'老管家',    archetype:'忠诚谨慎' },
+  '林婉':  { cls:'linwan',   color:'var(--linwan)',   letter:'婉', role:'私人医生',  archetype:'冷静专业' },
+  '苏苏':  { cls:'susu',     color:'var(--susu)',     letter:'苏', role:'侄女',      archetype:'情绪不稳' },
+  '王总':  { cls:'wangzong', color:'var(--wangzong)', letter:'王', role:'商业伙伴',  archetype:'强势精明' },
+  '阿福':  { cls:'afu',      color:'var(--afu)',      letter:'福', role:'厨师',      archetype:'老实紧张' },
+  '小张':  { cls:'xiaozhang',color:'var(--xiaozhang)',letter:'张', role:'保安',      archetype:'年轻心虚' },
 };
 
 const PRESETS = {
@@ -870,17 +700,13 @@ const PRESETS = {
   '小张': ['你昨晚巡逻了吗？','监控为什么有空白？','有人进出过书房吗？','你听到了什么动静？'],
 };
 
-const PHASE_NAME = {
-  dinner:'晚宴', investigation:'调查', confrontation:'对峙', ending:'结局'
-};
+const PHASE_NAME = { dinner:'晚宴', investigation:'调查', confrontation:'对峙', ending:'结局' };
+const CLOCK_NAMES = ['深夜 0:00','凌晨 1:00','凌晨 2:00','凌晨 3:00','凌晨 4:00','凌晨 5:00','清晨 6:00','清晨 7:00','早晨 8:00'];
 
-// ─── 状态 ────────────────────────────────────────────
-let sessionId = null;
-let es = null;
-let gameEnded = false;
-let currentNpc = null; // for talk modal
+// ── 状态 ───────────────────────────────────────
+let sessionId = null, es = null, gameEnded = false, currentNpc = null, actionLoading = false;
 
-// ─── 初始化 ──────────────────────────────────────────
+// ── 初始化 ─────────────────────────────────────
 function startGame() {
   document.getElementById('onboarding').style.display = 'none';
   initGame();
@@ -894,110 +720,80 @@ async function initGame() {
     updateState(d.state);
     connectSSE(sessionId);
     document.getElementById('connDot').classList.add('live');
-  } catch(e) {
-    log('system', '连接服务器失败: ' + e.message);
-  }
+  } catch(e) { log('entry-system', '连接服务器失败: ' + e.message); }
 }
 
-// ─── SSE ─────────────────────────────────────────────
+// ── SSE ─────────────────────────────────────────
 function connectSSE(sid) {
   if (es) es.close();
   es = new EventSource(`/api/stream/${sid}`);
-  es.addEventListener('connected', () => {
-    document.getElementById('connDot').classList.add('live');
-  });
+  es.addEventListener('connected', () => document.getElementById('connDot').classList.add('live'));
   es.addEventListener('narrator', e => streamNarrator(JSON.parse(e.data)));
   es.addEventListener('npc_reply', e => streamNPCReply(JSON.parse(e.data)));
   es.addEventListener('system', e => handleSystem(JSON.parse(e.data)));
   es.addEventListener('game_over', e => showGameOver(JSON.parse(e.data)));
   es.addEventListener('heartbeat', () => {});
-  es.onerror = () => {
-    document.getElementById('connDot').classList.remove('live');
-  };
+  es.onerror = () => document.getElementById('connDot').classList.remove('live');
 }
 
-// ─── 渲染 ─────────────────────────────────────────────
+// ── 渲染 ───────────────────────────────────────
 function streamNarrator(chunks) {
-  const el = document.createElement('div');
-  el.className = 'entry-narrator';
+  const el = document.createElement('div'); el.className = 'entry-narrator';
   document.getElementById('story-log').appendChild(el);
   streamText(el, chunks);
 }
 
 function streamNPCReply(data) {
-  const npc = data.npc;
-  const meta = NPC_META[npc] || {};
-  const w = document.createElement('div');
-  w.className = 'entry-dialogue';
-  w.innerHTML = `
-    <div class="avatar" style="background:${meta.color}22;color:${meta.color};border-color:${meta.color}55">
-      ${meta.letter || npc[0]}
-    </div>
-    <div class="bubble">
-      <div class="speaker-name">${npc}</div>
-    </div>`;
+  const npc = data.npc, meta = NPC[npc] || {};
+  const w = document.createElement('div'); w.className = 'entry-dialogue';
+  w.innerHTML = `<div class="avatar" style="background:${meta.color}18;color:${meta.color};border-color:${meta.color}44">${meta.letter||npc[0]}</div>
+    <div class="bubble"><div class="speaker-name">${npc}</div></div>`;
   document.getElementById('story-log').appendChild(w);
-  const bubble = w.querySelector('.bubble');
-  streamText(bubble, data.text);
+  streamText(w.querySelector('.bubble'), data.text);
   scroll();
 }
 
 function streamText(el, chunks) {
   let i = 0;
-  const cur = document.createElement('span');
-  cur.className = 'typing-cursor';
-  el.appendChild(cur);
+  const cur = document.createElement('span'); cur.className = 'typing-cursor'; el.appendChild(cur);
   function next() {
     if (i < chunks.length) {
-      el.insertBefore(document.createTextNode(chunks[i]), cur);
-      i++; scroll();
-      setTimeout(next, 55 + Math.random() * 50);
-    } else {
-      cur.remove();
-    }
+      el.insertBefore(document.createTextNode(chunks[i]), cur); i++; scroll();
+      setTimeout(next, 52 + Math.random() * 48);
+    } else { cur.remove(); }
   }
   next();
 }
 
 function handleSystem(data) {
   if (data.type === 'game_over') { showGameOver(data); return; }
-  if (data.type === 'clock') {
-    log('entry-clock', '─── ' + data.text + ' ───');
-    return;
-  }
-  if (data.type === 'location') {
-    showFlash(data.text.split('\n')[0]);
-    return;
-  }
+  if (data.type === 'clock') { log('entry-clock', '─── ' + data.text + ' ───'); return; }
+  if (data.type === 'location') { showFlash(data.text.split('\n')[0]); return; }
   const cls = ['phase-hint','npc_action','npc_decision','linwan_alert','accusation','boat_arrived'].includes(data.type)
     ? 'entry-system phase-hint' : 'entry-system';
   log(cls, data.text || JSON.stringify(data));
 }
 
 function log(cls, text) {
-  const el = document.createElement('div');
-  el.className = cls;
-  el.textContent = text;
-  document.getElementById('story-log').appendChild(el);
-  scroll();
+  const el = document.createElement('div'); el.className = cls; el.textContent = text;
+  document.getElementById('story-log').appendChild(el); scroll();
 }
 
 function showFlash(text) {
-  const flash = document.getElementById('scene-flash');
+  const f = document.getElementById('scene-flash');
   document.getElementById('flash-text').textContent = text;
-  flash.classList.add('active');
-  setTimeout(() => flash.classList.remove('active'), 1200);
+  f.classList.add('active');
+  setTimeout(() => f.classList.remove('active'), 1200);
 }
 
 function showGameOver(d) {
   document.getElementById('go-verdict').textContent = d.verdict || '';
-  const full = (d.summary || '') + '\n\n真凶: ' + (d.culprit || '?') +
-    (d.innocent && d.innocent.length ? '\n无辜: ' + d.innocent.join('、') : '');
+  const full = (d.summary||'') + '\n\n真凶: ' + (d.culprit||'?') +
+    (d.innocent&&d.innocent.length ? '\n无辜: ' + d.innocent.join('、') : '');
   document.getElementById('go-summary').textContent = '';
   document.getElementById('gameover').classList.add('show');
   gameEnded = true;
-  const el = document.getElementById('go-summary');
-  streamText(el, [full]);
+  streamText(document.getElementById('go-summary'), [full]);
 }
 
 function restartGame() {
@@ -1008,7 +804,7 @@ function restartGame() {
   initGame();
 }
 
-// ─── 状态同步 ─────────────────────────────────────────
+// ── 状态同步 ────────────────────────────────────
 function updateState(s) {
   if (!s) return;
 
@@ -1016,175 +812,202 @@ function updateState(s) {
   document.getElementById('h-clock').textContent = s.clock_name || '—';
   document.getElementById('h-phase').textContent = PHASE_NAME[s.phase] || s.phase || '—';
   document.getElementById('h-location').textContent = s.player_location || '—';
-  document.getElementById('h-evcount').textContent = (s.inventory || []).length;
-  document.getElementById('h-talked').textContent = (s.talked_npcs || []).length;
+  document.getElementById('h-evcount').textContent = (s.inventory||[]).length;
+  document.getElementById('h-talked').textContent = (s.talked_npcs||[]).length;
+
+  const phaseBadge = document.getElementById('h-phase');
+  phaseBadge.className = 'phase-badge' + (s.phase === 'confrontation' ? ' confrontation' : '');
 
   // sidebar
   document.getElementById('s-clock').textContent = s.clock_name || '—';
   document.getElementById('s-phase').textContent = PHASE_NAME[s.phase] || s.phase || '—';
   document.getElementById('s-location').textContent = s.player_location || '—';
 
-  // evidence
-  const inv = s.inventory || [];
-  document.getElementById('s-evidence').innerHTML = inv.length
-    ? inv.map(e => `<span class="etag">${e}</span>`).join('')
-    : '<span class="etag-empty">尚未获得证据</span>';
+  // evidence cards
+  renderEvidence(s.evidence_details || []);
 
   // public events
   const evts = s.public_events || [];
   document.getElementById('s-events').innerHTML = evts.length
-    ? evts.map(e => `<div class="event-item">${e}</div>`).join('')
-    : '<span class="etag-empty">暂无公共事件</span>';
+    ? '<div class="event-list">' + evts.map(e => `<div class="event-item">${e}</div>`).join('') + '</div>'
+    : '<div class="ev-empty-small">暂无公共事件</div>';
 
-  // scene stage: location
-  document.getElementById('sc-location').textContent = s.player_location || '—';
-  document.getElementById('sc-desc').textContent = _locationDesc(s.player_location);
+  // scene stage
+  if (s.current_location) {
+    const loc = s.current_location;
+    const stage = document.getElementById('scene-stage');
+    stage.setAttribute('data-theme', loc.theme || 'room');
+    document.getElementById('sc-loc-name').textContent = loc.name || '—';
+    document.getElementById('sc-loc-mood').textContent = loc.mood || '';
+    const card = stage.querySelector('.scene-loc-card');
+    if (card) card.style.setProperty('--loc-color', loc.color || 'var(--gold)');
+  }
 
   // NPC cards
-  renderNPCCards(s);
+  renderNPCCards(s.npcs || []);
 
-  // action buttons
-  if (s.available_actions) {
-    renderActions(s.available_actions);
+  // timeline
+  renderTimeline(s.progress || {}, s.phase);
+
+  // actions
+  if (s.available_actions) renderActions(s.available_actions);
+}
+
+function renderEvidence(details) {
+  const container = document.getElementById('ev-container');
+  if (!details || details.length === 0) {
+    container.innerHTML = '<div class="ev-empty">尚未获得证据。<br>移动到关键地点或盘问相关人物，可能发现新的线索。</div>';
+    return;
   }
+  container.innerHTML = '<div class="evidence-cards">' + details.map(ev => `
+    <div class="ev-card">
+      <div class="ev-icon">${ev.icon || '🔍'}</div>
+      <div class="ev-info">
+        <div class="ev-name">${ev.name}</div>
+        <div class="ev-meta">来源: ${ev.source} · 指向: ${ev.points_to}</div>
+      </div>
+      <div class="ev-level ${ev.level==='关键'?'critical':ev.level==='重要'?'important':'normal'}">${ev.level}</div>
+    </div>`).join('') + '</div>';
 }
 
-function _locationDesc(loc) {
-  const descs = {
-    '大厅':'古堡大厅，水晶吊灯昏黄，窗外暴风雨呼啸。',
-    '书房':'书架林立，书桌上散落文件和钢笔，空气中有淡淡药味。',
-    '厨房':'灶台有余温，阿福独自坐在角落，神情不安。',
-    '餐厅':'长餐桌上菜肴半食，酒杯东倒西歪，似匆忙离席。',
-    '保安室':'监控室，几块屏幕闪烁，小张独自守夜。',
-    '走廊':'长走廊，墙上挂着人物油画，脚步声在空旷中回响。',
-    '陈伯房间':'简朴整洁，床头放着褪色的老照片。',
-    '苏苏房间':'化妆台堆满化妆品，角落有未寄出的信封。',
-    '林婉房间':'医学书籍堆在桌上，消毒水气味。',
-    '王总房间':'行李箱敞开，满是商业文件。',
-    '自己房间':'临时客房，窗外海浪拍岸。',
-  };
-  return descs[loc] || '昏暗不明。';
-}
-
-function renderNPCCards(s) {
+function renderNPCCards(npcs) {
   const container = document.getElementById('npc-list');
   container.innerHTML = '';
-  const locs = s.npc_locations || {};
-  const talked = s.talked_npcs || [];
-  const playerLoc = s.player_location;
-
-  for (const [name, npcLoc] of Object.entries(locs)) {
-    const meta = NPC_META[name] || { cls:'', color:'var(--muted)', letter:name[0], role:'' };
-    const isHere = npcLoc === playerLoc;
-    const isTalked = talked.includes(name);
+  for (const npc of npcs) {
+    const meta = NPC[npc.name] || {};
+    const susp = npc.suspicion_of_player || 0;
+    const suspColor = susp > 60 ? 'var(--danger)' : susp > 30 ? 'var(--gold)' : 'var(--narrator)';
 
     const card = document.createElement('div');
-    card.className = 'npc-card' + (isHere ? ' here' : '') + (isTalked ? ' talked' : '') + (!isHere ? ' npc-card-absent' : '');
+    card.className = 'npc-card' +
+      (npc.present ? ' here' : ' absent') +
+      (npc.talked ? ' talked' : '');
 
     card.innerHTML = `
       <div class="npc-top">
         <div class="npc-avatar" style="background:${meta.color}18;color:${meta.color};border-color:${meta.color}44">
-          ${meta.letter}
+          ${meta.letter || npc.name[0]}
         </div>
         <div class="npc-info">
-          <div class="npc-name">${name}</div>
-          <div class="npc-role">${meta.role}</div>
-          <div class="npc-status">
-            ${isHere ? '<span class="npc-here-badge">在场</span>' : ''}
-            ${isTalked ? '<span class="npc-talked-badge">已对话</span>' : ''}
+          <div class="npc-name">${npc.name}</div>
+          <div class="npc-role">${meta.role || npc.public_role || ''}</div>
+          <div class="npc-badges">
+            ${npc.present ? '<span class="badge-here">在场</span>' : ''}
+            ${npc.talked ? '<span class="badge-talked">已对话</span>' : ''}
+            ${!npc.alive ? '<span class="badge-dead">已死亡</span>' : ''}
           </div>
         </div>
       </div>
-      ${!isHere ? `<div class="npc-absent-label">在 ${npcLoc}</div>` : ''}
-      ${isHere ? `<button class="npc-talk-btn" onclick="openTalk('${name}')">盘 问</button>` : ''}`;
-
+      ${!npc.present ? `<div class="npc-absent-loc">在 ${npc.location}</div>` : ''}
+      ${npc.present && npc.alive ? `<button class="npc-talk-btn" onclick="openTalk('${npc.name}')">盘 问</button>` : ''}
+      ${susp > 0 ? `<div class="npc-suspicion">
+        <div class="suspicion-label"><span>对你的警觉</span><span>${susp}</span></div>
+        <div class="suspicion-bar-bg"><div class="suspicion-bar-fill" style="width:${susp}%;background:${suspColor}"></div></div>
+      </div>` : ''}`;
     container.appendChild(card);
   }
+}
+
+function renderTimeline(progress, phase) {
+  const clockEl = document.getElementById('tl-clock');
+  const maxC = progress.max_clock || 8;
+  const curC = progress.clock || 0;
+  clockEl.innerHTML = '';
+  for (let i = 0; i <= maxC; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'tl-dot' + (i < curC ? ' passed' : i === curC ? ' current' : '');
+    clockEl.appendChild(dot);
+  }
+
+  const phases = ['晚宴','调查','对峙'];
+  const phaseOrder = ['dinner','investigation','confrontation'];
+  const curIdx = phaseOrder.indexOf(phase);
+  const phaseTrack = document.getElementById('tl-phases');
+  phaseTrack.innerHTML = phases.map((name, i) =>
+    `<div class="tl-phase-badge ${i < curIdx ? 'done' : i === curIdx ? 'active' : ''}">${name}</div>`
+  ).join('');
+
+  document.getElementById('tl-events').textContent =
+    `事件 ${progress.event_count || 0} | 证据 ${progress.evidence_count || 0} | 对话 ${progress.talked_count || 0}/${progress.npc_count || 6}`;
 }
 
 function renderActions(actions) {
   const container = document.getElementById('action-groups');
   container.innerHTML = '';
-
   const talk = actions.filter(a => a.type === 'talk');
   const move = actions.filter(a => a.type === 'move');
-  const other = actions.filter(a => !['talk','move'].includes(a.type));
+  const inv = actions.filter(a => a.type === 'investigate');
+  const adv = actions.filter(a => a.type === 'advance');
+  const acc = actions.filter(a => a.type === 'accuse');
 
   function makeGroup(label, items) {
     if (!items.length) return;
     const group = document.createElement('div');
     group.className = 'action-group';
-    const lbl = document.createElement('span');
-    lbl.className = 'action-group-label';
-    lbl.textContent = label;
+    const lbl = document.createElement('span'); lbl.className = 'action-group-label'; lbl.textContent = label;
     group.appendChild(lbl);
     for (const a of items) {
       const btn = document.createElement('button');
-      btn.className = 'action-btn' + (a.enabled ? '' : ' disabled');
-      btn.textContent = a.label;
-      btn.disabled = !a.enabled;
+      btn.className = 'action-btn' + (a.enabled ? '' : ' disabled') + (actionLoading ? ' loading' : '');
+      btn.textContent = a.label; btn.disabled = !a.enabled || actionLoading;
       if (!a.enabled && a.hint) btn.title = a.hint;
-      btn.onclick = () => doAction(a);
+      btn.onclick = () => !actionLoading && doAction(a);
       group.appendChild(btn);
     }
     container.appendChild(group);
   }
 
   makeGroup('移动', move);
-  makeGroup('调查', other.filter(a => a.type === 'investigate'));
-  makeGroup('推进', other.filter(a => a.type === 'advance'));
-  if (other.filter(a => a.type === 'accuse').length) {
-    makeGroup('指认', other.filter(a => a.type === 'accuse'));
-  }
+  makeGroup('盘问', talk);
+  makeGroup('调查', inv);
+  makeGroup('推进', adv);
+  if (acc.length) makeGroup('指认', acc);
 }
 
-// ─── 动作执行 ─────────────────────────────────────────
+// ── 动作执行 ────────────────────────────────────
 async function doAction(a) {
-  if (gameEnded) { restartGame(); return; }
-  if (a.type === 'talk') return; // handled by openTalk
+  if (gameEnded || actionLoading) { if (gameEnded) restartGame(); return; }
+  if (a.type === 'talk') return;
   await executeAction(a.type, a.target, null);
 }
 
 async function executeAction(type, target, text) {
+  actionLoading = true;
+  if (type !== 'advance') renderActions(document.querySelectorAll('.action-btn')); // optimistic disable
   try {
     const r = await fetch('/api/action', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({session_id: sessionId, type, target, text})
     });
     const d = await r.json();
     if (d.state) updateState(d.state);
-  } catch(e) {
-    log('entry-system', '发送失败: ' + e.message);
-  }
+  } catch(e) { log('entry-system', '发送失败: ' + e.message); }
+  actionLoading = false;
 }
 
-// ─── TALK MODAL ───────────────────────────────────────
+// ── TALK MODAL ─────────────────────────────────
 function openTalk(npcName) {
   if (gameEnded) return;
   currentNpc = npcName;
-  const meta = NPC_META[npcName] || {};
-  const overlay = document.getElementById('talk-overlay');
-
-  document.getElementById('talk-avatar').textContent = meta.letter || npcName[0];
-  document.getElementById('talk-avatar').style.background = (meta.color || 'var(--muted)') + '18';
-  document.getElementById('talk-avatar').style.color = meta.color || 'var(--muted)';
-  document.getElementById('talk-avatar').style.borderColor = (meta.color || 'var(--muted)') + '44';
+  const meta = NPC[npcName] || {};
+  const ov = document.getElementById('talk-overlay');
+  const av = document.getElementById('talk-avatar');
+  av.textContent = meta.letter || npcName[0];
+  av.style.background = (meta.color || 'var(--muted)') + '18';
+  av.style.color = meta.color || 'var(--muted)';
+  av.style.borderColor = (meta.color || 'var(--muted)') + '44';
   document.getElementById('talk-title').textContent = '盘问 ' + npcName;
   document.getElementById('talk-role').textContent = meta.role || '';
 
-  const presets = document.getElementById('preset-list');
-  presets.innerHTML = '';
+  const pl = document.getElementById('preset-list');
+  pl.innerHTML = '';
   (PRESETS[npcName] || []).forEach(q => {
-    const btn = document.createElement('button');
-    btn.className = 'preset-btn';
-    btn.textContent = q;
-    btn.onclick = () => { document.getElementById('talk-input').value = q; };
-    presets.appendChild(btn);
+    const b = document.createElement('button'); b.className = 'preset-btn';
+    b.textContent = q; b.onclick = () => { document.getElementById('talk-input').value = q; };
+    pl.appendChild(b);
   });
-
   document.getElementById('talk-input').value = '';
-  overlay.classList.add('show');
+  ov.classList.add('show');
   document.getElementById('talk-input').focus();
 }
 
@@ -1197,12 +1020,10 @@ document.getElementById('talk-send').onclick = () => {
   const text = document.getElementById('talk-input').value.trim();
   if (!text) return;
   closeTalk();
-  if (!currentNpc) return;
-  executeAction('talk', currentNpc, text);
+  if (currentNpc) executeAction('talk', currentNpc, text);
 };
 
 document.getElementById('talk-cancel').onclick = closeTalk;
-
 document.getElementById('talk-input').onkeydown = e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('talk-send').click(); }
 };

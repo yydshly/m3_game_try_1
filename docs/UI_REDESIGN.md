@@ -113,10 +113,63 @@
 
 ---
 
-## 8. 下一轮 UI 迭代建议
+## 8. 当前 P2 深化内容
 
-1. **场景区**：根据地点切换 CSS 背景色温（书房偏暖、保安室偏冷）
-2. **证据板**：用卡片网格替代标签列表，显示证据来源
-3. **人物关系**：增加 NPC 相互关系可视化（谁怀疑谁）
-4. **时间轴**：在侧边显示时钟推进的时间线
-5. **map.html**：评估是否能作为地图 UI 原型保留（当前 `map.html` 独立于本次重构）
+### 8.1 后端结构化字段增强
+
+`_world_to_dict` 新增字段：
+
+| 字段 | 内容 |
+|------|------|
+| `npcs` | 每个 NPC 含 name / public_role / location / alive / talked / present / suspicion_of_player |
+| `current_location` | name / description / theme / mood / color / present_npcs |
+| `evidence_details` | 每条证据含 name / source / points_to / level / icon |
+| `progress` | evidence_count / talked_count / npc_count / clock / max_clock / phase / event_count |
+
+`game/rules.py` 新增：
+- `EVIDENCE_METADATA`：证据元数据（source / points_to / level / icon）
+- `LOCATION_THEMES`：地点主题（theme / mood / color）
+
+### 8.2 场景视觉系统
+
+每个地点有独立 CSS `data-theme` 背景：
+- `hall` / `study` / `kitchen` / `dining` / `security` / `corridor` / `room`
+- 渐变 + 伪元素左边框颜色区分场景氛围
+- 地点主题色映射到场景舞台顶部竖线
+
+### 8.3 人物视觉系统
+
+每个 NPC 有前端配置 `NPC`（color / letter / role / archetype）：
+- 字母头像 + 颜色一眼区分角色
+- NPC 卡片含：在场/已对话/警觉度进度条/死亡状态
+- 警觉度颜色：红（>60）/ 金（>30）/ 蓝（≤30）
+
+### 8.4 证据板升级
+
+从"标签列表"升级为"证据卡片"：
+- 图标 + 证据名 + 来源/指向 + 重要性标签（关键/重要/线索）
+- 空状态显示引导文案
+
+### 8.5 时间线栏
+
+Header 下方新增 `timeline-bar`：
+- 时段节点进度条（已过=金色/当前=红脉冲/未到=灰）
+- 阶段徽章（晚宴/调查/对峙）当前阶段高亮
+- 右下角事件统计（事件数/证据数/对话数）
+
+### 8.6 剧情区优化
+
+- 按钮 loading 状态防连点
+- 对话提交后自动关闭弹层
+- 不同消息类型独立 CSS 样式
+
+---
+
+## 9. 下一轮 UI 迭代建议
+
+1. **场景背景**：地点切换时 CSS 背景色温动态变化（书房偏暖、保安室偏冷）
+2. **证据板**：卡片网格 + 证据来源地点标记
+3. **人物关系**：NPC 之间关系可视化（谁怀疑谁）
+4. **时间轴**：在侧边或底部显示更详细的时钟推进时间线
+5. **map.html**：评估是否能作为地图 UI 原型保留
+6. **移动端适配**：当前为桌面端，暂无移动端布局

@@ -143,21 +143,81 @@ class CommandResponse(BaseModel):
 # ============================================================
 
 def _world_to_dict(world: WorldState) -> dict[str, Any]:
+    import game.rules as rules
+
+    # -- npcs: per-NPC structured data for UI
+    npc_locations = all_npc_locations(world)
+    talked_set = set(world.player.revealed_to.keys())
+    npcs = []
+    for name, npc in world.npcs.items():
+        loc = npc_locations.get(name, "未知")
+        suspicion = getattr(npc, "suspicion_of_player", 0)
+        npcs.append({
+            "name": name,
+            "public_role": npc.public_role,
+            "location": loc,
+            "alive": npc.alive,
+            "talked": name in talked_set,
+            "present": loc == world.player.location,
+            "suspicion_of_player": suspicion,
+        })
+
+    # -- current_location
+    loc_name = world.player.location
+    loc_meta = rules.LOCATION_THEMES.get(loc_name, {"theme": "room", "mood": "", "color": "#5a5a6e"})
+    present_npcs = [n for n, loc in npc_locations.items() if loc == loc_name]
+    current_location = {
+        "name": loc_name,
+        "description": rules.LOCATION_DESCRIPTIONS.get(loc_name, f"{loc_name}，昏暗不明。"),
+        "theme": loc_meta["theme"],
+        "mood": loc_meta["mood"],
+        "color": loc_meta["color"],
+        "present_npcs": present_npcs,
+    }
+
+    # -- evidence_details
+    evidence_details = []
+    for ev_name in world.player.inventory:
+        meta = rules.EVIDENCE_METADATA.get(ev_name, {"source": "未知", "points_to": "?", "level": "?", "icon": "🔍"})
+        evidence_details.append({
+            "name": ev_name,
+            "source": meta["source"],
+            "points_to": meta["points_to"],
+            "level": meta["level"],
+            "icon": meta["icon"],
+        })
+
+    # -- progress
+    progress = {
+        "evidence_count": len(world.player.inventory),
+        "talked_count": len(talked_set),
+        "npc_count": len(world.npcs),
+        "clock": world.clock,
+        "max_clock": rules.MAX_CLOCK,
+        "phase": world.phase,
+        "event_count": len(world.public_events),
+    }
+
     return {
         "phase": world.phase,
         "clock": world.clock,
         "clock_name": clock_name(world.clock),
         "player_location": world.player.location,
         "inventory": world.player.inventory,
-        "npc_locations": all_npc_locations(world),
-        "talked_npcs": list(world.player.revealed_to.keys()),
-        "public_events": [e.description for e in world.public_events[-5:]],
+        "npc_locations": npc_locations,
+        "talked_npcs": list(talked_set),
+        "public_events": [e.description for e in world.public_events[-8:]],
         "turn_count": world.turn_count,
         "game_over": world.phase == "ending",
         "available_actions": [
             {"type": a.type, "target": a.target, "label": a.label, "enabled": a.enabled, "hint": a.hint}
             for a in available_actions(world)
         ],
+        # new UI-friendly fields
+        "npcs": npcs,
+        "current_location": current_location,
+        "evidence_details": evidence_details,
+        "progress": progress,
     }
 
 
