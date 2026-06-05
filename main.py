@@ -19,13 +19,16 @@ import sys
 from typing import Optional
 
 from game.actions import dispatch, PlayerAction
-from game.agents import DirectorAgent, NPCDialogueAgent, NarratorAgent
+from game.agents import DirectorAgent, NPCDecisionAgent, NPCDialogueAgent, NarratorAgent
 from game.persistence import load_game, save_game
 from game.rules import (
     MAX_CLOCK,
     all_npc_locations,
+    advance_clock,
     check_phase_transition,
     clock_name,
+    on_clock_advance,
+    _linwan_evidence_exposed,
 )
 from game.scenario_data import build_initial_world
 from game.state import PHASE_CONFRONTATION, WorldState
@@ -275,7 +278,15 @@ def main() -> None:
         elif cmd == "save":
             result = dispatch(world, PlayerAction(type="save"))
         elif cmd == "load":
-            result = dispatch(world, PlayerAction(type="load"))
+            # load 不走 dispatch（无法跨作用域替换 world），直接处理
+            try:
+                world = load_game()
+                cmd_status(world)
+            except FileNotFoundError:
+                print("没有找到存档。")
+            except Exception as e:
+                print(f"读档失败: {e}")
+            continue
         elif cmd == "advance":
             result = dispatch(world, PlayerAction(type="advance"))
         elif cmd == "accuse":

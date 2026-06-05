@@ -221,17 +221,18 @@ async def get_available(session_id: str):
     return {"actions": available_actions(session.world)}
 @app.post("/api/command")
 async def send_command(req: CommandRequest):
-    """处理一条命令，返回结果（同步部分）。游戏结束后续通过 SSE 推送。"""
+    """
+    将中文命令解析为 PlayerAction，统一走 dispatch()。
+    不再单独实现游戏规则。
+    """
     session = get_session(req.session_id)
     if session.ended:
         return CommandResponse(ok=False, message="游戏已结束，请新建会话")
 
     world = session.world
     cmd = req.command.strip()
-    b = _broadcaster(req.session_id)
-    result_msg = ""
 
-    # === 解析命令 ===
+    # === 解析命令 → PlayerAction ===
     if not cmd:
         return CommandResponse(ok=False, message="空命令")
 
@@ -240,173 +241,111 @@ async def send_command(req: CommandRequest):
         session.ended = True
         return CommandResponse(ok=True, message="再见", state=_world_to_dict(world))
 
-    # 状态
-    if cmd in ("查看状态", "状态", "s", "查看"):
-        return CommandResponse(ok=True, message="", state=_world_to_dict(world))
-
     # 存档
     if cmd in ("存档", "save"):
         from game.persistence import save_game
         path = save_game(world)
         return CommandResponse(ok=True, message=f"已存档: {path}", state=_world_to_dict(world))
 
-    # 读档
+    # 读档（直接替换 session.world，不走 dispatch）
     if cmd in ("读档", "load"):
         try:
             from game.persistence import load_game
-            world = load_game()
-            session.world = world
-            return CommandResponse(ok=True, message="读档成功", state=_world_to_dict(world))
+            session.world = load_game()
+            return CommandResponse(ok=True, message="读档成功", state=_world_to_dict(session.world))
+        except FileNotFoundError:
+            return CommandResponse(ok=False, message="没有找到存档")
         except Exception as e:
             return CommandResponse(ok=False, message=f"读档失败: {e}")
 
-    # === 需要 world_state 的命令 ===
-    result_msg = await _handle_game_command(world, cmd, b)
+    # 解析为 PlayerAction（复用 main.py 的 parse_command 逻辑）
+    parsed = _parse_command(cmd)
+    if parsed is None:
+        return CommandResponse(ok=False, message="无法理解命令", state=_world_to_dict(world))
 
-    return CommandResponse(ok=True, message=result_msg, state=_world_to_dict(world))
+    action_type, args = parsed
+
+    if action_type == "quit":
+        session.ended = True
+        return CommandResponse(ok=True, message="再见", state=_world_to_dict(world))
+
+    # 构造 PlayerAction 并走统一 dispatch
+    if action_type == "talk":
+        npc_name, message = args
+        action = PlayerAction(type="talk", target=npc_name, text=message)
+    elif action_type == "accuse":
+        action = PlayerAction(type="accuse", target=args[0])
+    elif action_type in ("move", "investigate", "advance", "status"):
+        action = PlayerAction(type=action_type)
+    else:
+        return CommandResponse(ok=False, message=f"命令 '{cmd}' 暂不支持", state=_world_to_dict(world))
+
+    result = dispatch(world, action)
+
+    if not result.ok:
+        return CommandResponse(ok=False, message=result.error, state=_world_to_dict(world))
+
+    # events 通过 SSE 推送（前端已有 handler）
+    b = _broadcaster(req.session_id)
+    for ev in result.events:
+        await b.put(ev.get("kind", "system"), ev)
+
+    return CommandResponse(ok=True, message="", state=_world_to_dict(world))
 
 
-async def _handle_game_command(world: WorldState, cmd: str, b: SSEBroadcaster) -> str:
-    """处理游戏命令，可能产生多条 SSE 事件。"""
-    result = ""
+def _parse_command(cmd: str):
+    """
+    将中文命令解析为 (action_type, args)。
+    逻辑与 main.py parse_command 保持一致。
+    """
+    stripped = cmd.strip()
+    if not stripped:
+        return None
 
-    # --- 推进时段 ---
-    if cmd in ("推进时段", "推进时间", "下个时段", "时间推进"):
-        old_clock = world.clock
-        advance_clock(world)
-        advance_phase(world)
-        result = f"⏰ {clock_name(old_clock)} → {clock_name(world.clock)}"
-        await b.put("system", {"type": "clock", "text": result})
-
-        # Narrator 流式播报
-        narration = NarratorAgent.narrate(world)
-        await b.put("narrator", _stream_text(narration))
-
-        # NPC 时段行为
-        npc_events = on_clock_advance(world)
-        for ev in npc_events:
-            await b.put("system", {"type": "npc_action", "text": ev})
-            result += f"\n{ev}"
-
-        # 林婉 DecisionAgent
-        if _linwan_evidence_exposed(world):
-            linwan = world.npcs.get("林婉")
-            if linwan and linwan.alive:
-                decision = DirectorAgent.decide(linwan, world)
-                action = decision.get("action", "wait")
-                if action != "wait":
-                    reason = decision.get("reason", "")
-                    text = f"【林婉的决策】{action}（原因: {reason}）"
-                    await b.put("system", {"type": "npc_decision", "text": text})
-                    result += f"\n{text}"
-
-        # 检查阶段推进
-        pending = check_phase_transition(world)
-        if pending and pending != world.phase:
-            text = f"【系统】已满足 {pending} 阶段进入条件，使用「推进时段」即可进入。"
-            await b.put("system", {"type": "phase_hint", "text": text})
-
-        # 时段到顶，自动结局
-        if world.clock >= MAX_CLOCK and world.phase != "ending":
-            advance_phase(world)
-            await b.put("system", {"type": "boat_arrived", "text": "渡船已经靠岸！时间耗尽。"})
-            judgment = DirectorAgent.judge(world, player_accusation=None)
-            await b.put("game_over", judgment)
-            world.phase = "ending"
-            await b.put("system", {"type": "game_over", "text": f"【结局】{judgment['verdict']}"})
-        return result
-
-    # --- 移动 ---
-    if cmd.startswith("移动到"):
-        loc = cmd[3:].strip()
-        desc = rule_move_to(world, loc)
-        await b.put("system", {"type": "location", "text": desc})
-        return desc
-
-    # --- 调查 ---
-    if cmd in ("调查", "搜查", "搜"):
-        loc = world.player.location
-        if not can_investigate(loc):
-            result = f"在 {loc} 没有可调查的物品。"
-        else:
-            gained = investigate(world, loc)
-            if gained:
-                result = f"获得物品: {', '.join(gained)}"
-            else:
-                result = "没有获得新物品。（提示:有些证据需要先和特定NPC说过话才能获得）"
-        await b.put("system", {"type": "investigate", "text": result})
-        return result
-
-    # --- 对话 ---
-    if cmd.startswith("跟"):
-        if "说:" not in cmd:
-            return "命令格式: 跟 <NPC名> 说: <话>"
-        parts = cmd.split()
+    # 跟 NPC 对话
+    if stripped.startswith("跟"):
+        if "说:" not in stripped:
+            return None
+        parts = stripped.split()
         try:
-            npc_name = parts[1]
-            message = cmd.split("说:", 1)[1].strip()
+            name = parts[1]
+            msg = stripped.split("说:", 1)[1].strip()
+            return ("talk", [name, msg])
         except IndexError:
-            return "命令格式: 跟 <NPC名> 说: <话>"
+            return None
 
-        if npc_name not in world.npcs:
-            return f"'{npc_name}' 不存在。可用NPC: {', '.join(world.npcs.keys())}"
+    # 移动
+    if stripped.startswith("移动到"):
+        loc = stripped[3:].strip()
+        return ("move", [loc])
 
-        # 记录对话
-        if npc_name not in world.player.revealed_to:
-            world.player.revealed_to[npc_name] = []
-        world.player.revealed_to[npc_name].append(message)
+    # 调查
+    if stripped in ("调查", "搜查", "搜"):
+        return ("investigate", [])
 
-        # 阶段推进检测（提前提示）
-        pending = check_phase_transition(world)
-        if pending and pending != world.phase:
-            hint = f"【系统】已满足 {pending} 阶段进入条件。"
-            await b.put("system", {"type": "phase_hint", "text": hint})
+    # 推进时段
+    if stripped in ("推进时段", "推进时间", "下个时段", "时间推进"):
+        return ("advance", [])
 
-        # 流式 NPC 回复
-        npc = world.npcs[npc_name]
-        # 先发 typing 指示，让前端立刻显示"..."动画
-        await b.put("npc_typing", {"npc": npc_name})
-        reply = NPCDialogueAgent.respond(npc=npc, world=world, player_message=message)
-        await b.put("npc_reply", {"npc": npc_name, "text": _stream_text(reply)})
-        world.turn_count += 1
+    # 状态
+    if stripped in ("查看状态", "状态", "s", "查看"):
+        return ("status", [])
 
-        # 林婉警觉
-        if npc_name == "林婉" and _linwan_evidence_exposed(world):
-            await b.put("system", {"type": "linwan_alert", "text": "林婉似乎有所察觉..."})
+    # 指认
+    if stripped.startswith("指认"):
+        target = stripped[2:].strip()
+        if target:
+            return ("accuse", [target])
+        return None
 
-        return f"【{npc_name}】{reply}"
-
-    # --- 指认 ---
-    if cmd.startswith("指认"):
-        accused = cmd[2:].strip()
-        if world.phase != PHASE_CONFRONTATION:
-            pending = check_phase_transition(world)
-            if pending:
-                return f"需要先进入 {pending} 阶段才能指认。"
-            return "还没到对峙阶段，继续调查吧。"
-
-        if accused not in world.npcs:
-            return f"'{accused}' 不是有效嫌疑人。"
-
-        result = f"指认: {accused}"
-        await b.put("system", {"type": "accusation", "text": result})
-        judgment = DirectorAgent.judge(world, player_accusation=accused)
-        await b.put("game_over", judgment)
-        world.phase = "ending"
-        result += f"\n【结局】{judgment['verdict']}\n{judgment['summary']}"
-        await b.put("system", {"type": "game_over", "text": result})
-        return result
-
-    return "无法理解命令"
+    return None
 
 
 def _stream_text(text: str) -> list[str]:
-    """将文本拆分成逐句/逐段的流式片段，模拟打字效果。"""
-    # 简单按句子切分
+    """将文本拆分成逐句/逐段的流式片段。"""
     import re
     sentences = re.split(r"(?<=[。！？])", text)
-    chunks = []
-    buffer = ""
+    chunks, buffer = [], ""
     for s in sentences:
         s = s.strip()
         if not s:

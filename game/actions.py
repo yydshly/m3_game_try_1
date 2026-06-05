@@ -128,7 +128,7 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
     events 里每条是 {"kind": "...", "speaker": "...", "text": "..."}，
     kind ∈ {"narrator","npc","system","investigate","clock","game_over"}。
     """
-    from game.agents import DirectorAgent, NPCDialogueAgent, NarratorAgent
+    from game.agents import DirectorAgent, NPCDecisionAgent, NPCDialogueAgent, NarratorAgent
     import game.rules as rules
 
     if action.type not in LEGAL_ACTION_TYPES:
@@ -214,7 +214,7 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
         if rules._linwan_evidence_exposed(world):
             linwan = world.npcs.get("林婉")
             if linwan and linwan.alive:
-                decision = DirectorAgent.decide(linwan, world)
+                decision = NPCDecisionAgent.decide(linwan, world)
                 act = decision.get("action", "wait")
                 if act != "wait":
                     reason = decision.get("reason", "")
