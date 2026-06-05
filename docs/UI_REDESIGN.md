@@ -287,6 +287,46 @@ manifest.endings[key].placeholder
 
 ---
 
+## P6 主入口可玩性重整
+
+### 为什么右侧行动区作为主操作入口
+
+底部 `action-bar` 位于视口最下方，需要滚动才能看到；剧情日志增长时按钮被推离视口导致用户迷失。右侧侧边栏固定可见，始终在同一位置，是更稳定的交互入口。
+
+### 底部 action-bar 的处理
+
+底部 action-bar 已通过 CSS `display:none` 隐藏，避免与右侧面板形成双重主入口。隐藏而非删除，保留后续如果要恢复为辅助快捷栏的可能性。
+
+### 人物舞台简化
+
+左侧 NPC 大列表（max-height:230px 垂直卡片）替换为横向紧凑头像条（height:72px），只显示当前地点在场人物，每个角色只显示小头像+名字，点击头像可打开盘问弹层。主舞台人物立绘层（`stage-character-layer`）底部空间从 236px 缩减至 72px，舞台人物显示区域更大。
+
+### 点击反馈和 loading 策略
+
+- 引入 `latestActions` 全局变量缓存最新可用动作
+- `executeAction` 期间：当前触发的按钮显示"执行中…"文本 + `loading-this` 样式；其他按钮加 `loading-other`（半透明不可点击）
+- `finally` 中恢复 `actionLoading=false`，下次 `updateState` 调用 `renderActions` 时重新渲染完整按钮组
+- 每个动作按钮点击时输出 `console.log('[ActionClick]', type, target)` 供调试
+
+### 目标提示区域
+
+中央剧情区顶部新增 `objective-hint` 条（固定在 story-panel 顶部），根据当前阶段和进度显示：
+- 晚宴阶段："与在场人物对话，熟悉各方关系"
+- 调查阶段（0证据）："调查现场，寻找关键证据"
+- 调查阶段（<3证据）："收集更多证据，了解各人不在场证明"
+- 调查阶段（≥3证据）："整合证据链，确认真凶身份"
+- 对峙阶段："指认真凶！选择正确的嫌疑人终结本案"
+- 时钟≥6时附加"（时间紧迫，注意推进）"警告
+
+### 当前仍存在的限制
+
+- `renderActions` 仍同时写底部和右侧 DOM（底部已隐藏），存在冗余
+- 调查/推进 primary 按钮样式只在右侧面板生效，底部隐藏后无意义
+- objective-hint 仅前端生成，不从后端读取，适合当前阶段演示
+- stage-character-layer 的 pointer-events:none 与按钮可点击性通过子元素 button 的 pointer-events:auto 配合实现
+
+---
+
 ## P5 主入口行动面板修复
 
 ### 为什么底部 action bar 不足以作为主交互入口

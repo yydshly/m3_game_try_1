@@ -202,6 +202,39 @@ header {
   font-style: italic;
 }
 
+/* Loading states */
+.side-action-btn.loading-this {
+  opacity: 0.85;
+  color: var(--gold);
+  border-color: var(--gold);
+  background: rgba(201,162,39,0.12);
+  cursor: wait;
+}
+
+.side-action-btn.loading-other {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Primary (recommended) action button */
+.side-action-btn.primary {
+  border-color: rgba(201,162,39,0.5);
+  color: var(--gold);
+  background: rgba(201,162,39,0.07);
+  font-weight: 600;
+}
+
+.side-action-btn.primary:hover:not(:disabled) {
+  background: rgba(201,162,39,0.18);
+  border-color: var(--gold);
+}
+
+/* ── HIDE BOTTOM ACTION BAR ─────────── */
+/* Bottom bar is now duplicate; hide it to avoid confusing dual entry points */
+#action-groups {
+  display: none;
+}
+
 /* ── MAIN LAYOUT ────────────────────── */
 .game-layout {
   display: flex;
@@ -227,8 +260,9 @@ header {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8,12,20,0.18) 0%, rgba(8,12,20,0.38) 52%, rgba(8,12,20,0.62) 100%);
-  z-index: 0;
+  /* Lighter overlay — keeps characters readable without killing atmosphere */
+  background: linear-gradient(180deg, rgba(8,12,20,0.08) 0%, rgba(8,12,20,0.20) 52%, rgba(8,12,20,0.50) 100%);
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -236,8 +270,8 @@ header {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top center, rgba(201,162,39,0.06) 0%, transparent 42%);
-  z-index: 0;
+  background: radial-gradient(circle at top center, rgba(201,162,39,0.08) 0%, transparent 42%);
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -248,8 +282,8 @@ header {
   height: 100%;
   object-fit: cover;
   object-position: center center;
-  opacity: 0.46;
-  filter: brightness(0.86) saturate(0.92) contrast(1.05);
+  opacity: 0.35;
+  filter: brightness(0.80) saturate(0.88) contrast(1.05);
   z-index: 0;
   pointer-events: none;
 }
@@ -258,13 +292,24 @@ header {
 .scene-stage[data-theme="dining"] .scene-bg-img,
 .scene-stage[data-theme="security"] .scene-bg-img,
 .scene-stage[data-theme="corridor"] .scene-bg-img {
-  opacity: 0.54;
-  filter: brightness(0.92) saturate(0.95) contrast(1.04);
+  opacity: 0.42;
+  filter: brightness(0.88) saturate(0.90) contrast(1.04);
 }
 
 .scene-loc-card, .scene-divider, .npc-list {
   position: relative;
   z-index: 3;
+}
+
+/* Character art layer — above overlays, below NPC strip text */
+.stage-character-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 64px;
+  bottom: 72px;
+  z-index: 2;
+  pointer-events: none;
 }
 
 [data-theme="hall"]    { background: linear-gradient(160deg, rgba(201,162,39,0.08) 0%, var(--surface) 50%); }
@@ -316,16 +361,75 @@ header {
   margin-top: auto;
 }
 
+/* Compact horizontal NPC presence strip — replaces tall list */
 .npc-list {
   flex: 0 0 auto;
-  max-height: 230px;
+  height: 72px;
   overflow-y: auto;
-  padding: 8px 10px;
+  padding: 6px 10px;
   display: flex;
-  flex-direction: column;
-  gap: 7px;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
   background: linear-gradient(180deg, rgba(8,12,20,0.72) 0%, rgba(8,12,20,0.92) 100%);
   backdrop-filter: blur(10px);
+}
+
+/* Each present NPC in the strip as a mini avatar + name */
+.npc-strip-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.npc-strip-item:hover .npc-strip-avatar {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.npc-strip-avatar {
+  width: 38px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  border: 1px solid;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.npc-strip-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.npc-strip-name {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.npc-strip-item.here .npc-strip-name {
+  color: var(--gold);
+}
+
+.npc-strip-empty {
+  font-size: 10px;
+  color: var(--muted);
+  font-style: italic;
+  width: 100%;
+  text-align: center;
+  padding: 4px 0;
 }
 
 .stage-character-layer {
@@ -333,7 +437,7 @@ header {
   left: 0;
   right: 0;
   top: 64px;
-  bottom: 236px;
+  bottom: 72px;
   z-index: 2;
   pointer-events: none;
 }
@@ -407,7 +511,8 @@ header {
   align-items: flex-end;
   justify-content: center;
   position: relative;
-  filter: drop-shadow(0 14px 26px rgba(0,0,0,0.4));
+  /* Stronger glow so characters pop against dark backgrounds */
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(201,162,39,0.15));
 }
 
 .stage-character-art img {
@@ -564,6 +669,29 @@ header {
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+}
+
+.objective-hint {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  background: rgba(201,162,39,0.06);
+  border-bottom: 1px solid rgba(201,162,39,0.15);
+  font-size: 11.5px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.objective-hint::before {
+  content: '🎯';
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.objective-hint:empty {
+  display: none;
 }
 
 .story-log {
@@ -974,6 +1102,7 @@ header {
 
   <!-- CENTER: STORY LOG -->
   <div class="story-panel">
+    <div class="objective-hint" id="objective-hint"></div>
     <div class="story-log" id="story-log"></div>
   </div>
 
@@ -1164,6 +1293,7 @@ const CLOCK_NAMES = ['深夜 0:00','凌晨 1:00','凌晨 2:00','凌晨 3:00','�
 // ── 状态 ───────────────────────────────────────
 let sessionId = null, es = null, gameEnded = false, currentNpc = null, actionLoading = false;
 let latestNpcs = [], latestLocation = null;
+let latestActions = []; // 缓存最新可用动作，用于 loading 状态恢复
 
 // ── 初始化 ─────────────────────────────────────
 function startGame() {
@@ -1339,6 +1469,42 @@ function restartGame() {
 }
 
 // ── 状态同步 ────────────────────────────────────
+function renderObjectiveHint(s) {
+  const el = document.getElementById('objective-hint');
+  if (!el) return;
+  const phase = s.phase;
+  const evCount = (s.inventory || []).length;
+  const talkedNpcs = s.talked_npcs || [];
+  const progress = s.progress || {};
+
+  let hint = '';
+  if (phase === 'dinner') {
+    hint = '当前目标：与在场人物对话，熟悉各方关系';
+  } else if (phase === 'investigation') {
+    if (evCount === 0) {
+      hint = '当前目标：调查现场，寻找关键证据';
+    } else if (evCount < 3) {
+      hint = '当前目标：收集更多证据，了解各人不在场证明';
+    } else {
+      hint = '当前目标：整合证据链，确认真凶身份';
+    }
+  } else if (phase === 'confrontation') {
+    hint = '当前目标：指认真凶！选择正确的嫌疑人终结本案';
+  } else if (phase === 'ending') {
+    el.textContent = '';
+    return;
+  }
+
+  // Append clock warning if near end
+  const clock = progress.clock || 0;
+  const maxClock = progress.max_clock || 8;
+  if (phase !== 'ending' && clock >= 6) {
+    hint += '（时间紧迫，注意推进）';
+  }
+
+  el.textContent = hint;
+}
+
 function updateState(s) {
   if (!s) return;
 
@@ -1356,6 +1522,9 @@ function updateState(s) {
   document.getElementById('s-clock').textContent = s.clock_name || '—';
   document.getElementById('s-phase').textContent = PHASE_NAME[s.phase] || s.phase || '—';
   document.getElementById('s-location').textContent = s.player_location || '—';
+
+  // objective hint
+  renderObjectiveHint(s);
 
   // evidence cards
   renderEvidence(s.evidence_details || []);
@@ -1440,60 +1609,52 @@ function renderEvidence(details) {
 }
 
 function renderNPCCards(npcs) {
+  // Render compact horizontal strip of present NPCs in the scene stage bottom
   const container = document.getElementById('npc-list');
   container.innerHTML = '';
-  for (const npc of npcs) {
+  const present = (npcs || []).filter(n => n.present && n.alive !== false);
+
+  if (!present.length) {
+    const empty = document.createElement('div');
+    empty.className = 'npc-strip-empty';
+    empty.textContent = '当前地点暂无在场人物';
+    container.appendChild(empty);
+    return;
+  }
+
+  for (const npc of present) {
     const meta = NPC[npc.name] || {};
-    const susp = npc.suspicion_of_player || 0;
-    const suspColor = susp > 60 ? 'var(--danger)' : susp > 30 ? 'var(--gold)' : 'var(--narrator)';
     const charAsset = resolveCharacterAsset(npc.name);
     const avatarColor = charAsset?.color || meta.color || 'var(--muted)';
     const avatarLetter = charAsset?.letter || meta.letter || npc.name[0];
+    const portrait = charAsset?.portrait;
+    const placeholder = charAsset?.placeholder;
 
-    const card = document.createElement('div');
-    card.className = 'npc-card' +
-      (npc.present ? ' here' : ' absent') +
-      (npc.talked ? ' talked' : '');
+    const item = document.createElement('div');
+    item.className = 'npc-strip-item here';
 
-    // Build avatar: try portrait image first, fallback to letter avatar
-    let avatarContent;
-    let portraitImg = null;
-    if (charAsset?.portrait) {
-      portraitImg = document.createElement('img');
-      portraitImg.alt = npc.name;
-      const ph = charAsset.placeholder;
-      setImageWithFallback(portraitImg, charAsset.portrait, ph);
-      avatarContent = '';
+    const avatar = document.createElement('div');
+    avatar.className = 'npc-strip-avatar';
+    avatar.style.cssText = `background:${avatarColor}18;color:${avatarColor};border-color:${avatarColor}55`;
+
+    if (portrait) {
+      const img = document.createElement('img');
+      img.alt = npc.name;
+      setImageWithFallback(img, portrait, placeholder);
+      avatar.textContent = '';
+      avatar.appendChild(img);
     } else {
-      avatarContent = avatarLetter;
+      avatar.textContent = avatarLetter;
     }
 
-    card.innerHTML = `
-      <div class="npc-top">
-        <div class="npc-avatar" style="background:${avatarColor}18;color:${avatarColor};border-color:${avatarColor}44">
-          ${avatarContent}
-        </div>
-        <div class="npc-info">
-          <div class="npc-name">${npc.name}</div>
-          <div class="npc-role">${meta.role || npc.public_role || ''}</div>
-          <div class="npc-badges">
-            ${npc.present ? '<span class="badge-here">在场</span>' : ''}
-            ${npc.talked ? '<span class="badge-talked">已对话</span>' : ''}
-            ${!npc.alive ? '<span class="badge-dead">已死亡</span>' : ''}
-          </div>
-        </div>
-      </div>
-      ${!npc.present ? `<div class="npc-absent-loc">在 ${npc.location}</div>` : ''}
-      ${npc.present && npc.alive ? `<button class="npc-talk-btn" onclick="openTalk('${npc.name}')">盘 问</button>` : ''}
-      ${susp > 0 ? `<div class="npc-suspicion">
-        <div class="suspicion-label"><span>对你的警觉</span><span>${susp}</span></div>
-        <div class="suspicion-bar-bg"><div class="suspicion-bar-fill" style="width:${susp}%;background:${suspColor}"></div></div>
-      </div>` : ''}`;
-    if (portraitImg) {
-      const avatarHost = card.querySelector('.npc-avatar');
-      if (avatarHost) avatarHost.appendChild(portraitImg);
-    }
-    container.appendChild(card);
+    const name = document.createElement('div');
+    name.className = 'npc-strip-name';
+    name.textContent = npc.name;
+
+    item.appendChild(avatar);
+    item.appendChild(name);
+    item.onclick = () => openTalk(npc.name);
+    container.appendChild(item);
   }
 }
 
@@ -1559,7 +1720,10 @@ function renderTimeline(progress, phase) {
 }
 
 function renderActions(actions) {
-  // Bottom action bar — horizontal groups
+  // Cache latest actions for loading state recovery
+  latestActions = actions || [];
+
+  // Bottom action bar — horizontal groups (hidden via CSS, kept for compatibility)
   const container = document.getElementById('action-groups');
   container.innerHTML = '';
   const talk = actions.filter(a => a.type === 'talk');
@@ -1592,13 +1756,15 @@ function renderActions(actions) {
   if (acc.length) makeGroup('指认', acc);
 
   // Also render to right sidebar action panel
-  renderSideActionGroups(actions);
+  renderSideActionGroups(latestActions, null);
 }
 
-function renderSideActionGroups(actions) {
+function renderSideActionGroups(actions, loadingType) {
   const container = document.getElementById('side-action-groups');
   if (!container) return;
-  if (!actions || !actions.length) {
+
+  // Only show empty state when actions array is empty (not undefined/null)
+  if (!actions || (Array.isArray(actions) && actions.length === 0)) {
     container.innerHTML = '<div class="ev-empty-small">暂无可用动作</div>';
     return;
   }
@@ -1618,9 +1784,15 @@ function renderSideActionGroups(actions) {
     lbl.textContent = label;
     group.appendChild(lbl);
     for (const a of items) {
+      const isLoadingThis = actionLoading && loadingType === a.type;
       const btn = document.createElement('button');
-      btn.className = 'side-action-btn' + (a.enabled ? '' : ' disabled') + (actionLoading ? ' loading' : '');
-      btn.textContent = a.label;
+      const isPrimary = (a.type === 'investigate' && inv.length) || (a.type === 'advance');
+      btn.className = 'side-action-btn'
+        + (a.enabled ? '' : ' disabled')
+        + (actionLoading && !isLoadingThis ? ' loading-other' : '')
+        + (isLoadingThis ? ' loading-this' : '')
+        + (isPrimary && a.enabled && !actionLoading ? ' primary' : '');
+      btn.textContent = isLoadingThis ? '执行中…' : a.label;
       btn.disabled = !a.enabled || actionLoading;
       if (!a.enabled && a.hint) {
         btn.title = a.hint;
@@ -1642,6 +1814,7 @@ function renderSideActionGroups(actions) {
 
 // ── 动作执行 ────────────────────────────────────
 async function doAction(a) {
+  console.log('[ActionClick]', a.type, a.target || '');
   if (gameEnded || actionLoading) { if (gameEnded) restartGame(); return; }
   // Talk actions open the modal instead of sending directly
   if (a.type === 'talk') {
@@ -1654,8 +1827,8 @@ async function doAction(a) {
 
 async function executeAction(type, target, text) {
   actionLoading = true;
-  // Optimistic: clear bottom bar while loading; sidebar reflects loading via :disabled
-  if (type !== 'advance') renderActions([]);
+  // Re-render sidebar with latest cached actions + loading state on current buttons
+  renderSideActionGroups(latestActions, type);
   try {
     const r = await fetch('/api/action', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -1663,8 +1836,12 @@ async function executeAction(type, target, text) {
     });
     const d = await r.json();
     if (d.state) updateState(d.state);
-  } catch(e) { log('entry-system', '发送失败: ' + e.message); }
-  actionLoading = false;
+  } catch(e) {
+    log('entry-system', '发送失败: ' + e.message);
+  } finally {
+    actionLoading = false;
+    // updateState will call renderActions which re-caches latestActions
+  }
 }
 
 // ── TALK MODAL ─────────────────────────────────
