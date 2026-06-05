@@ -1464,6 +1464,7 @@ function restartGame() {
   document.getElementById('go-image').style.display = 'none';
   document.getElementById('story-log').innerHTML = '';
   gameEnded = false;
+  talkModalOpen = false;
   if (es) { es.close(); es = null; }
   initGame();
 }
@@ -1563,8 +1564,9 @@ function updateState(s) {
   // timeline
   renderTimeline(s.progress || {}, s.phase);
 
-  // actions
-  if (s.available_actions) renderActions(s.available_actions);
+  // actions — normalize to array so empty/undefined is handled consistently
+  const actions = Array.isArray(s.available_actions) ? s.available_actions : [];
+  renderActions(actions);
 }
 
 function renderEvidence(details) {
@@ -1838,16 +1840,36 @@ async function executeAction(type, target, text) {
     if (d.state) updateState(d.state);
   } catch(e) {
     log('entry-system', '操作失败: ' + e.message);
-    // On failure, restore buttons immediately — don't wait for next updateState
-    renderSideActionGroups(latestActions, null);
   } finally {
+    // Always restore buttons after actionLoading is cleared,
+    // whether the request succeeded, failed, or threw an exception
     actionLoading = false;
+    renderSideActionGroups(latestActions, null);
   }
 }
 
 // ── TALK MODAL ─────────────────────────────────
+let talkModalOpen = false; // guard against re-entrant openTalk calls
+
 function openTalk(npcName) {
   if (gameEnded) return;
+  // Prevent opening talk modal while an action is in-flight
+  if (actionLoading) {
+    log('entry-system', '当前操作尚未完成，请稍候…');
+    return;
+  }
+  // Prevent re-entrant or duplicate modal opens
+  const ov = document.getElementById('talk-overlay');
+  if (talkModalOpen && !ov.classList.contains('show')) {
+    // Modal was being tracked as open but is actually hidden — reset guard
+    talkModalOpen = false;
+  }
+  if (talkModalOpen) {
+    // Modal already open — just update which NPC is selected
+    currentNpc = npcName;
+    return;
+  }
+  talkModalOpen = true;
   currentNpc = npcName;
   renderStageCharacters(latestNpcs, latestLocation);
   const meta = NPC[npcName] || {};
@@ -1893,6 +1915,7 @@ function openTalk(npcName) {
 
 function closeTalk(clearSelection = true) {
   document.getElementById('talk-overlay').classList.remove('show');
+  talkModalOpen = false;
   if (clearSelection) currentNpc = null;
   renderStageCharacters(latestNpcs, latestLocation);
 }
