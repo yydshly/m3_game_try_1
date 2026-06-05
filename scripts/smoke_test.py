@@ -162,6 +162,53 @@ def test_save_load_flow():
     print("[PASS] test_save_load_flow")
 
 
+def _force_confrontation_phase(w):
+    """Helper: 直接把 world 推入 confrontation 阶段（用于测试指认路径）"""
+    w.phase = PHASE_CONFRONTATION
+
+
+def test_ending_key_correct_accusation():
+    """测试：正确指认林婉时 game_over.ending_key == 'culprit_caught'"""
+    w = build_initial_world()
+    _force_confrontation_phase(w)
+    r = dispatch(w, PlayerAction(type="accuse", target="林婉"))
+    assert r.ok, f"指认失败: {r.error}"
+    go_events = [e for e in r.events if e.get("kind") == "game_over"]
+    assert len(go_events) == 1, "应该有 1 个 game_over 事件"
+    d = go_events[0]
+    assert "ending_key" in d, "game_over 事件缺少 ending_key 字段"
+    assert d["ending_key"] == "culprit_caught", f"正确指认林婉应是 culprit_caught，实际: {d['ending_key']}"
+    print("[PASS] test_ending_key_correct_accusation")
+
+
+def test_ending_key_wrong_accusation():
+    """测试：错误指认其他人时 game_over.ending_key == 'wrong_accuse'"""
+    w = build_initial_world()
+    _force_confrontation_phase(w)
+    r = dispatch(w, PlayerAction(type="accuse", target="陈伯"))
+    assert r.ok, f"指认失败: {r.error}"
+    go_events = [e for e in r.events if e.get("kind") == "game_over"]
+    assert len(go_events) == 1, "应该有 1 个 game_over 事件"
+    d = go_events[0]
+    assert "ending_key" in d, "game_over 事件缺少 ending_key 字段"
+    assert d["ending_key"] == "wrong_accuse", f"错误指认应是 wrong_accuse，实际: {d['ending_key']}"
+    print("[PASS] test_ending_key_wrong_accusation")
+
+
+def test_ending_key_structure():
+    """测试：game_over 事件包含所有必需的结构化字段（含 ending_key）"""
+    w = build_initial_world()
+    _force_confrontation_phase(w)
+    r = dispatch(w, PlayerAction(type="accuse", target="苏苏"))
+    assert r.ok
+    go_events = [e for e in r.events if e.get("kind") == "game_over"]
+    assert len(go_events) == 1
+    d = go_events[0]
+    for field in ("verdict", "summary", "culprit", "innocent", "ending_key"):
+        assert field in d, f"game_over 缺少字段: {field}"
+    print("[PASS] test_ending_key_structure")
+
+
 def main():
     tests = [
         test_build_world,
@@ -175,6 +222,9 @@ def main():
         test_advance_clock,
         test_valid_locations_match_rules,
         test_save_load_flow,
+        test_ending_key_correct_accusation,
+        test_ending_key_wrong_accusation,
+        test_ending_key_structure,
     ]
 
     passed = 0

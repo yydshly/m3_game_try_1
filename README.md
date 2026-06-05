@@ -116,6 +116,12 @@ Web UI 已从"调试页面"升级为**沉浸式游戏主界面原型**：
 - 详细设计：参见 [`docs/ASSET_PIPELINE.md`](docs/ASSET_PIPELINE.md)
 - 生图提示词：参见 [`docs/IMAGE_PROMPTS.md`](docs/IMAGE_PROMPTS.md)
 
+**结局画面**使用结构化 `ending_key` 映射视觉资源，不再依赖 verdict 文案匹配：
+- `culprit_caught` → 真凶落网（正确指认）
+- `wrong_accuse` → 错误指认（错误指认）
+- `culprit_escape` → 真凶逃脱（时间耗尽）
+- 旧版 `verdict` 关键词匹配仅作兼容 fallback
+
 ## 禁止事项
 
 - 不要提交 `.env`、logs/、API Key 到 Git

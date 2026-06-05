@@ -208,10 +208,22 @@ Header 下方新增 `timeline-bar`：
 
 游戏结束时，结局面板自动展示对应结局图，增强结局的仪式感与沉浸感。
 
-**三类结局映射**（通过 verdict 文本关键词匹配）：
-- **真凶落网**：`verdict` 含”落网”/”捕获”/”成功” → `ending_culprit_caught`
-- **真凶逃脱**：`verdict` 含”逃脱”/”逃逸”/”失败”/”未指认” → `ending_culprit_escape`
-- **错误指认**：`verdict` 含”错误”/”冤枉”/”无辜” → `ending_wrong_accuse`
+**结局图映射（结构化 ending_key）**：
+
+`game_over` 事件携带的 `ending_key` 是结构化字段，前端优先用它直接映射 manifest：
+
+| ending_key | manifest key | 触发条件 |
+|---|---|---|
+| `culprit_caught` | 真凶落网 | 正确指认真凶 |
+| `wrong_accuse` | 错误指认 | 错误指认嫌疑人 |
+| `culprit_escape` | 真凶逃脱 | 时间耗尽 / 未指认 |
+
+**verdict 关键词匹配仅作兼容 fallback**：
+
+当 `game_over` 事件缺少 `ending_key`（旧版兼容）时，前端才会 fallback 到 verdict 文本关键词匹配：
+- `verdict` 含”落网”/”捕获”/”成功” → 真凶落网
+- `verdict` 含”逃脱”/”逃逸”/”失败”/”未指认”/”时间” → 真凶逃脱
+- `verdict` 含”错误”/”冤枉”/”无辜” → 错误指认
 
 **结局面板结构**：
 - 结局图片（来自 `manifest.endings[key].image`，16:9）
@@ -230,12 +242,12 @@ manifest.endings[key].placeholder
 ```
 
 **后端数据结构**：
-- `actions.py` 的 `game_over` 事件新增 `verdict` / `summary` / `culprit` / `innocent` 字段
-- 前端 `showGameOver(d)` 读取这些字段做映射
+- `actions.py` 的 `game_over` 事件包含 `verdict` / `summary` / `culprit` / `innocent` / `ending_key` 全部字段
+- 前端 `showGameOver(d)` 优先读 `ending_key`，fallback 到 verdict 关键词匹配
 
 **当前限制**：
-- verdict 关键词匹配是保守策略，可能不完全准确
-- 时间耗尽自动结局时 `player_accusation=None`，仍由 M3 的 judge 结果决定 verdict 类型
+- `ending_key` 为结构化字段，不再依赖 M3 返回的 verdict 文案措辞
+- 时间耗尽自动结局时 `ending_key = “culprit_escape”`（直接赋值，不走 M3 判官）
 - 结局图片若缺失，fallback 到纯文本，不影响流程
 
 ---

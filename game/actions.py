@@ -238,6 +238,7 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
                     "summary": judgment.get("summary", ""),
                     "culprit": judgment.get("culprit", ""),
                     "innocent": judgment.get("innocent", []),
+                    "ending_key": "culprit_escape",
                 })
 
         return ActionResult(ok=True, events=events)
@@ -260,6 +261,7 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
         events.append({"kind": "system", "speaker": "", "text": f"指认: {accused}"})
         judgment = DirectorAgent.judge(world, player_accusation=accused)
         world.phase = "ending"
+        ending_key = "culprit_caught" if accused == judgment.get("culprit") else "wrong_accuse"
         events.append({
             "kind": "game_over",
             "speaker": "",
@@ -268,6 +270,7 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
             "summary": judgment.get("summary", ""),
             "culprit": judgment.get("culprit", ""),
             "innocent": judgment.get("innocent", []),
+            "ending_key": ending_key,
         })
         return ActionResult(ok=True, events=events)
 

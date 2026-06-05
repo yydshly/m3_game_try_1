@@ -1198,8 +1198,14 @@ function showFlash(text) {
 }
 
 function showGameOver(d) {
-  // Load ending image from manifest based on verdict
-  const endingKey = _resolveEndingKey(d.verdict || '', d.culprit || '');
+  // Resolve ending key: structured ending_key first, then fallback to verdict keyword match
+  let endingKey = null;
+  if (d.ending_key) {
+    endingKey = endingKeyToManifestKey(d.ending_key);
+  }
+  if (!endingKey) {
+    endingKey = _resolveEndingKey(d.verdict || '', d.culprit || '');
+  }
   const endingAsset = _getEndingAsset(endingKey);
 
   const imgEl = document.getElementById('go-image');
@@ -1238,6 +1244,15 @@ function _resolveEndingKey(verdict, culprit) {
 function _getEndingAsset(key) {
   if (!assetManifest || !assetManifest.endings || !key) return null;
   return assetManifest.endings[key] || null;
+}
+
+function endingKeyToManifestKey(endingKey) {
+  const MAP = {
+    "culprit_caught": "真凶落网",
+    "culprit_escape": "真凶逃脱",
+    "wrong_accuse": "错误指认",
+  };
+  return MAP[endingKey] || null;
 }
 
 function closeGameOverShowLogs() {
