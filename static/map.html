@@ -300,6 +300,23 @@ body {
   border-radius: 12px; padding: 40px 48px; max-width: 480px; text-align: center;
 }
 #onboarding h2 { color: #c9a227; font-size: 20px; letter-spacing: 6px; margin-bottom: 20px; font-weight: 400; }
+#onboarding .mode-note {
+  background: rgba(201,162,39,0.08);
+  border: 1px solid rgba(201,162,39,0.32);
+  border-radius: 8px;
+  color: #d4dce8;
+  font-size: 13px;
+  line-height: 1.8;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+}
+#onboarding .mode-note strong {
+  color: #c9a227;
+  display: block;
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
 #onboarding p { color: #5a6a7e; font-size: 13px; line-height: 1.9; margin-bottom: 28px; }
 #onboarding .hint-list {
   background: #080c14; border: 1px solid #1e2d42; border-radius: 8px;
@@ -307,11 +324,23 @@ body {
   line-height: 2.2; color: #5a6a7e;
 }
 #onboarding .hint-list span { color: #c9a227; font-family: monospace; }
+#onboarding .entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
 #onboarding button {
   background: #7a6115; color: #080c14; border: none; border-radius: 6px;
-  padding: 11px 36px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 3px;
+  padding: 11px 28px; font-size: 14px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 2px;
+}
+#onboarding button.secondary {
+  background: transparent;
+  border: 1px solid rgba(201,162,39,0.35);
+  color: #c9a227;
 }
 #onboarding button:hover { background: #c9a227; }
+#onboarding button.secondary:hover { background: rgba(201,162,39,0.16); }
 
 /* 连接状态 */
 .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: #5a6a7e; }
@@ -334,6 +363,11 @@ body {
 <div id="onboarding">
   <div class="card">
     <h2>孤岛晚宴</h2>
+    <div class="mode-note">
+      <strong>实验地图模式</strong>
+      当前页面用于地图交互验证，不代表最终游戏视觉效果。<br>
+      推荐优先体验主游戏界面。
+    </div>
     <p>暴风雨困住了所有人。今晨，岛主周慎之被发现死在书房。<br>你是被请来的私人侦探。天亮之前，找出真凶。</p>
     <div class="hint-list">
       <span>点击 NPC</span> — 与对方对话<br>
@@ -341,7 +375,10 @@ body {
       <span>调查模式</span> — 点击场景物品获取证据<br>
       <span>推进时段</span> — 时间流逝，旁白播报
     </div>
-    <button onclick="startGame()">开始调查</button>
+    <div class="entry-actions">
+      <button onclick="startGame()">进入实验地图</button>
+      <button class="secondary" onclick="location.href='/'">前往主界面</button>
+    </div>
   </div>
 </div>
 
@@ -358,8 +395,10 @@ body {
 <div class="game-area">
   <div class="game-topbar">
     <span class="topbar-title">孤 岛 晚 宴</span>
+    <div class="phase-badge">实验地图模式</div>
     <div class="phase-badge" id="phaseBadge">晚宴</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <button class="advance-btn" onclick="location.href='/'">返回主界面</button>
       <span id="clockLabel" style="font-size:12px;color:#5a6a7e">深夜 0:00</span>
       <button class="advance-btn" onclick="advanceTime()">⏰ 推进时段</button>
     </div>

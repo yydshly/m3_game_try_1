@@ -57,6 +57,14 @@ python web_main.py
 # 浏览器打开 http://localhost:8000
 ```
 
+入口说明：
+
+- `http://localhost:8000/` 是主游戏入口。
+- `http://localhost:8000/map` 是实验地图页。
+- `/map` 仍使用 Canvas 抽象地图，只用于地图交互验证，不代表最终 UI 品质。
+- 当前产品主体验以 `/` 的视觉小说式、资产驱动 UI 为准。
+- 真实素材优先在 `/` 中验证。
+
 ## 冒烟测试
 
 ```bash
