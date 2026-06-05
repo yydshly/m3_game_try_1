@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" style="background:#0f1520">
+  <!-- 阿福 placeholder：厨师轮廓，壮实 -->
+  <defs>
+    <radialGradient id="afug" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#40a060" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="180" fill="url(#afug)"/>
+  <ellipse cx="60" cy="170" rx="36" ry="8" fill="#40a060" opacity="0.08"/>
+  <!-- 头部 -->
+  <ellipse cx="60" cy="36" rx="23" ry="26" fill="none" stroke="#40a060" stroke-width="1.2" opacity="0.6"/>
+  <!-- 厨师帽 -->
+  <rect x="42" y="12" width="36" height="15" fill="none" stroke="#40a060" stroke-width="1" rx="2" opacity="0.4"/>
+  <line x1="42" y1="27" x2="78" y2="27" stroke="#40a060" stroke-width="1" opacity="0.4"/>
+  <!-- 眼睛（紧张下垂） -->
+  <line x1="49" y1="36" x2="55" y2="36" stroke="#40a060" stroke-width="1" opacity="0.5"/>
+  <line x1="65" y1="36" x2="71" y2="36" stroke="#40a060" stroke-width="1" opacity="0.5"/>
+  <!-- 厨师服（白色） -->
+  <path d="M24 70 Q60 58 96 70 L100 155 Q60 162 20 155 Z" fill="none" stroke="#40a060" stroke-width="1.2" opacity="0.5"/>
+  <!-- 围裙 -->
+  <rect x="40" y="85" width="40" height="60" fill="none" stroke="#40a060" stroke-width="0.8" opacity="0.3" rx="2"/>
+  <!-- 手臂（粗壮） -->
+  <line x1="24" y1="80" x2="10" y2="125" stroke="#40a060" stroke-width="1.2" opacity="0.4"/>
+  <line x1="96" y1="80" x2="110" y2="125" stroke="#40a060" stroke-width="1.2" opacity="0.4"/>
+  <!-- 标签 -->
+  <text x="60" y="173" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#2a5a3a" opacity="0.6" letter-spacing="1">阿福</text>
+</svg>

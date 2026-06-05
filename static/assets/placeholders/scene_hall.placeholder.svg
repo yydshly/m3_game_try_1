@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" style="background:#0f1520">
+  <!-- 古堡大厅 placeholder：水晶吊灯 + 大门轮廓 -->
+  <defs>
+    <radialGradient id="hg1" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#c9a227" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#hg1)"/>
+  <!-- 地板 -->
+  <rect x="0" y="160" width="400" height="65" fill="#1a1f2e" opacity="0.8"/>
+  <line x1="0" y1="160" x2="400" y2="160" stroke="#2a3050" stroke-width="1"/>
+  <!-- 吊灯 -->
+  <line x1="200" y1="0" x2="200" y2="40" stroke="#c9a227" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="200" cy="45" rx="30" ry="8" fill="none" stroke="#c9a227" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="200" cy="55" rx="22" ry="6" fill="none" stroke="#c9a227" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="200" cy="63" rx="15" ry="5" fill="none" stroke="#c9a227" stroke-width="1" opacity="0.3"/>
+  <!-- 主门轮廓 -->
+  <rect x="155" y="70" width="90" height="90" fill="none" stroke="#2a3a52" stroke-width="1.5" rx="2"/>
+  <line x1="200" y1="70" x2="200" y2="160" stroke="#2a3a52" stroke-width="1"/>
+  <circle cx="175" cy="115" r="3" fill="#2a3a52" opacity="0.6"/>
+  <circle cx="225" cy="115" r="3" fill="#2a3a52" opacity="0.6"/>
+  <!-- 窗户暗示 -->
+  <rect x="40" y="80" width="50" height="70" fill="none" stroke="#1e2d42" stroke-width="1" rx="1"/>
+  <rect x="310" y="80" width="50" height="70" fill="none" stroke="#1e2d42" stroke-width="1" rx="1"/>
+  <!-- 标签 -->
+  <text x="200" y="210" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6a7e" opacity="0.7" letter-spacing="2">古堡大厅 · 真实图片待接入</text>
+</svg>

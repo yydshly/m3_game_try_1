@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" style="background:#0f1520">
+  <!-- 小张 placeholder：年轻保安轮廓 -->
+  <defs>
+    <radialGradient id="xzg" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#d08030" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="180" fill="url(#xzg)"/>
+  <ellipse cx="60" cy="170" rx="28" ry="8" fill="#d08030" opacity="0.08"/>
+  <!-- 头部 -->
+  <ellipse cx="60" cy="36" rx="19" ry="24" fill="none" stroke="#d08030" stroke-width="1.2" opacity="0.6"/>
+  <!-- 短发 -->
+  <path d="M41 26 Q60 12 79 26" fill="none" stroke="#d08030" stroke-width="1" opacity="0.4"/>
+  <!-- 眼睛 -->
+  <line x1="50" y1="34" x2="56" y2="34" stroke="#d08030" stroke-width="1" opacity="0.5"/>
+  <line x1="64" y1="34" x2="70" y2="34" stroke="#d08030" stroke-width="1" opacity="0.5"/>
+  <!-- 保安制服 -->
+  <path d="M30 70 Q60 60 90 70 L93 155 Q60 160 27 155 Z" fill="none" stroke="#d08030" stroke-width="1.2" opacity="0.5"/>
+  <!-- 肩章 -->
+  <path d="M30 72 L40 68 L50 72" fill="none" stroke="#d08030" stroke-width="0.8" opacity="0.4"/>
+  <path d="M70 72 L80 68 L90 72" fill="none" stroke="#d08030" stroke-width="0.8" opacity="0.4"/>
+  <!-- 手臂 -->
+  <line x1="30" y1="80" x2="16" y2="120" stroke="#d08030" stroke-width="1" opacity="0.4"/>
+  <line x1="90" y1="80" x2="104" y2="120" stroke="#d08030" stroke-width="1" opacity="0.4"/>
+  <!-- 标签 -->
+  <text x="60" y="173" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#6a4a2a" opacity="0.6" letter-spacing="1">小张</text>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" style="background:#100a0a">
+  <!-- 餐厅 placeholder：长桌 + 烛台 + 窗户 -->
+  <defs>
+    <radialGradient id="dg1" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#8b3a3a" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#100a0a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#dg1)"/>
+  <!-- 地板 -->
+  <rect x="0" y="155" width="400" height="70" fill="#1a1212" opacity="0.8"/>
+  <!-- 长桌 -->
+  <rect x="60" y="115" width="280" height="50" fill="none" stroke="#3a2020" stroke-width="1.5" rx="2"/>
+  <rect x="70" y="165" width="8" height="30" fill="#2a1818" opacity="0.6"/>
+  <rect x="322" y="165" width="8" height="30" fill="#2a1818" opacity="0.6"/>
+  <!-- 餐盘 -->
+  <ellipse cx="120" cy="125" rx="18" ry="8" fill="none" stroke="#3a2525" stroke-width="0.8" opacity="0.6"/>
+  <ellipse cx="180" cy="125" rx="18" ry="8" fill="none" stroke="#3a2525" stroke-width="0.8" opacity="0.6"/>
+  <ellipse cx="240" cy="125" rx="18" ry="8" fill="none" stroke="#3a2525" stroke-width="0.8" opacity="0.6"/>
+  <ellipse cx="300" cy="125" rx="18" ry="8" fill="none" stroke="#3a2525" stroke-width="0.8" opacity="0.6"/>
+  <!-- 烛台 -->
+  <line x1="140" y1="115" x2="140" y2="100" stroke="#8b6a30" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="140" cy="98" rx="4" ry="6" fill="#8b6a30" opacity="0.3"/>
+  <line x1="260" y1="115" x2="260" y2="100" stroke="#8b6a30" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="260" cy="98" rx="4" ry="6" fill="#8b6a30" opacity="0.3"/>
+  <!-- 窗户 -->
+  <rect x="160" y="30" width="80" height="60" fill="none" stroke="#2a1a1a" stroke-width="1.5" rx="2"/>
+  <line x1="200" y1="30" x2="200" y2="90" stroke="#2a1a1a" stroke-width="0.8"/>
+  <line x1="160" y1="60" x2="240" y2="60" stroke="#2a1a1a" stroke-width="0.8"/>
+  <!-- 标签 -->
+  <text x="200" y="215" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#6a4a4a" opacity="0.7" letter-spacing="2">餐厅 · 真实图片待接入</text>
+</svg>

@@ -156,6 +156,23 @@ header {
   flex-direction: column;
   overflow: hidden;
   transition: background 0.4s;
+  position: relative;
+}
+
+.scene-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.scene-loc-card, .scene-divider, .npc-list {
+  position: relative;
+  z-index: 1;
 }
 
 [data-theme="hall"]    { background: linear-gradient(160deg, rgba(201,162,39,0.08) 0%, var(--surface) 50%); }
@@ -422,6 +439,7 @@ header {
 }
 .ev-card:hover { border-color: rgba(93,164,196,0.4); }
 .ev-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.ev-icon-img { font-size: 16px; flex-shrink: 0; line-height: 1; }
 .ev-info { flex: 1; min-width: 0; }
 .ev-name { font-size: 11.5px; color: var(--text); font-weight: 500; }
 .ev-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
@@ -635,6 +653,7 @@ header {
 
   <!-- LEFT: SCENE STAGE -->
   <div class="scene-stage" id="scene-stage" data-theme="hall">
+    <img id="scene-bg-img" class="scene-bg-img" alt="" style="display:none"/>
     <div class="scene-loc-card">
       <div class="loc-name" id="sc-loc-name">—</div>
       <div class="loc-mood" id="sc-loc-mood">—</div>
@@ -681,6 +700,75 @@ header {
 </div>
 
 <script>
+// ═══════════════════════════════════════════════
+// 视觉资产管线 / Asset Pipeline
+// ═══════════════════════════════════════════════
+let assetManifest = null;
+
+async function loadAssetManifest() {
+  try {
+    const r = await fetch('/static/assets/manifest.json');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    assetManifest = await r.json();
+    console.log('[Asset] manifest loaded, asset_mode:', assetManifest.asset_mode);
+    return assetManifest;
+  } catch(e) {
+    console.warn('[Asset] manifest load failed, using fallback:', e.message);
+    return null;
+  }
+}
+
+function resolveSceneAsset(locationName) {
+  if (!assetManifest || !assetManifest.scenes) return null;
+  const scene = assetManifest.scenes[locationName];
+  if (!scene) return null;
+  return {
+    image: scene.image,
+    placeholder: scene.placeholder,
+    title: scene.title,
+    description: scene.description,
+  };
+}
+
+function resolveCharacterAsset(npcName) {
+  if (!assetManifest || !assetManifest.characters) return null;
+  const ch = assetManifest.characters[npcName];
+  if (!ch) return null;
+  return {
+    portrait: ch.portrait,
+    placeholder: ch.placeholder,
+    position: ch.position,
+    color: ch.color,
+    letter: ch.letter,
+  };
+}
+
+function resolveEvidenceAsset(evidenceName) {
+  if (!assetManifest || !assetManifest.evidence) return null;
+  const ev = assetManifest.evidence[evidenceName];
+  if (!ev) return null;
+  return {
+    icon: ev.icon,
+    placeholder: ev.placeholder,
+    title: ev.title,
+    source: ev.source,
+    points_to: ev.points_to,
+  };
+}
+
+function setImageWithFallback(img, primary, fallback, onError) {
+  if (!primary) { if (fallback) img.src = fallback; return; }
+  img.src = primary;
+  img.onerror = () => {
+    if (fallback) {
+      img.src = fallback;
+      img.onerror = null;
+    } else if (onError) {
+      onError();
+    }
+  };
+}
+
 // ── NPC 角色配置 ───────────────────────────────
 const NPC = {
   '陈伯':  { cls:'chenbo',   color:'var(--chenbo)',   letter:'伯', role:'老管家',    archetype:'忠诚谨慎' },
@@ -714,6 +802,8 @@ function startGame() {
 
 async function initGame() {
   try {
+    // Load asset manifest before connecting to game
+    await loadAssetManifest();
     const r = await fetch('/api/session', {method:'POST'});
     const d = await r.json();
     sessionId = d.session_id;
@@ -745,9 +835,29 @@ function streamNarrator(chunks) {
 
 function streamNPCReply(data) {
   const npc = data.npc, meta = NPC[npc] || {};
+  const charAsset = resolveCharacterAsset(npc);
+  const color = charAsset?.color || meta.color || 'var(--muted)';
+  const letter = charAsset?.letter || meta.letter || npc[0];
+
   const w = document.createElement('div'); w.className = 'entry-dialogue';
-  w.innerHTML = `<div class="avatar" style="background:${meta.color}18;color:${meta.color};border-color:${meta.color}44">${meta.letter||npc[0]}</div>
-    <div class="bubble"><div class="speaker-name">${npc}</div></div>`;
+  const avatarEl = document.createElement('div');
+  avatarEl.className = 'avatar';
+  avatarEl.style.cssText = `background:${color}18;color:${color};border-color:${color}44`;
+
+  if (charAsset?.portrait) {
+    const img = document.createElement('img');
+    img.style.cssText = 'width:33px;height:33px;border-radius:50%;object-fit:cover;';
+    img.alt = npc;
+    const ph = charAsset.placeholder;
+    setImageWithFallback(img, charAsset.portrait, ph);
+    avatarEl.textContent = '';
+    avatarEl.appendChild(img);
+  } else {
+    avatarEl.textContent = letter;
+  }
+
+  w.innerHTML = `<div class="bubble"><div class="speaker-name">${npc}</div></div>`;
+  w.insertBefore(avatarEl, w.firstChild);
   document.getElementById('story-log').appendChild(w);
   streamText(w.querySelector('.bubble'), data.text);
   scroll();
@@ -841,6 +951,16 @@ function updateState(s) {
     document.getElementById('sc-loc-mood').textContent = loc.mood || '';
     const card = stage.querySelector('.scene-loc-card');
     if (card) card.style.setProperty('--loc-color', loc.color || 'var(--gold)');
+
+    // Load scene background image from manifest
+    const bgImg = document.getElementById('scene-bg-img');
+    const sceneAsset = resolveSceneAsset(loc.name);
+    if (sceneAsset) {
+      setImageWithFallback(bgImg, sceneAsset.image, sceneAsset.placeholder);
+      bgImg.style.display = '';
+    } else {
+      bgImg.style.display = 'none';
+    }
   }
 
   // NPC cards
@@ -859,15 +979,39 @@ function renderEvidence(details) {
     container.innerHTML = '<div class="ev-empty">尚未获得证据。<br>移动到关键地点或盘问相关人物，可能发现新的线索。</div>';
     return;
   }
-  container.innerHTML = '<div class="evidence-cards">' + details.map(ev => `
+  container.innerHTML = '<div class="evidence-cards">' + details.map(ev => {
+    const evAsset = resolveEvidenceAsset(ev.name);
+    let iconContent = ev.icon || '🔍';
+    if (evAsset?.icon || evAsset?.placeholder) {
+      iconContent = `<img class="ev-icon-img" alt="${ev.name}" style="width:20px;height:20px;object-fit:contain;border-radius:3px;"/>`;
+    }
+    return `
     <div class="ev-card">
-      <div class="ev-icon">${ev.icon || '🔍'}</div>
+      <div class="ev-icon">${iconContent}</div>
       <div class="ev-info">
         <div class="ev-name">${ev.name}</div>
         <div class="ev-meta">来源: ${ev.source} · 指向: ${ev.points_to}</div>
       </div>
       <div class="ev-level ${ev.level==='关键'?'critical':ev.level==='重要'?'important':'normal'}">${ev.level}</div>
-    </div>`).join('') + '</div>';
+    </div>`;
+  }).join('') + '</div>';
+
+  // Load evidence icons via manifest
+  if (assetManifest) {
+    details.forEach(ev => {
+      const evAsset = resolveEvidenceAsset(ev.name);
+      if (evAsset) {
+        const cards = container.querySelectorAll('.ev-card');
+        const idx = details.indexOf(ev);
+        if (cards[idx]) {
+          const img = cards[idx].querySelector('.ev-icon-img');
+          if (img) {
+            setImageWithFallback(img, evAsset.icon, evAsset.placeholder);
+          }
+        }
+      }
+    });
+  }
 }
 
 function renderNPCCards(npcs) {
@@ -877,16 +1021,32 @@ function renderNPCCards(npcs) {
     const meta = NPC[npc.name] || {};
     const susp = npc.suspicion_of_player || 0;
     const suspColor = susp > 60 ? 'var(--danger)' : susp > 30 ? 'var(--gold)' : 'var(--narrator)';
+    const charAsset = resolveCharacterAsset(npc.name);
+    const avatarColor = charAsset?.color || meta.color || 'var(--muted)';
+    const avatarLetter = charAsset?.letter || meta.letter || npc.name[0];
 
     const card = document.createElement('div');
     card.className = 'npc-card' +
       (npc.present ? ' here' : ' absent') +
       (npc.talked ? ' talked' : '');
 
+    // Build avatar: try portrait image first, fallback to letter avatar
+    let avatarContent;
+    if (charAsset?.portrait) {
+      const img = document.createElement('img');
+      img.style.cssText = 'width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid ' + avatarColor + '44;';
+      img.alt = npc.name;
+      const ph = charAsset.placeholder;
+      setImageWithFallback(img, charAsset.portrait, ph);
+      avatarContent = '';
+    } else {
+      avatarContent = avatarLetter;
+    }
+
     card.innerHTML = `
       <div class="npc-top">
-        <div class="npc-avatar" style="background:${meta.color}18;color:${meta.color};border-color:${meta.color}44">
-          ${meta.letter || npc.name[0]}
+        <div class="npc-avatar" style="background:${avatarColor}18;color:${avatarColor};border-color:${avatarColor}44">
+          ${avatarContent}
         </div>
         <div class="npc-info">
           <div class="npc-name">${npc.name}</div>
@@ -990,12 +1150,31 @@ function openTalk(npcName) {
   if (gameEnded) return;
   currentNpc = npcName;
   const meta = NPC[npcName] || {};
+  const charAsset = resolveCharacterAsset(npcName);
   const ov = document.getElementById('talk-overlay');
   const av = document.getElementById('talk-avatar');
-  av.textContent = meta.letter || npcName[0];
-  av.style.background = (meta.color || 'var(--muted)') + '18';
-  av.style.color = meta.color || 'var(--muted)';
-  av.style.borderColor = (meta.color || 'var(--muted)') + '44';
+  const color = charAsset?.color || meta.color || 'var(--muted)';
+  const letter = charAsset?.letter || meta.letter || npcName[0];
+
+  // Try to show portrait image, fall back to letter avatar
+  const portrait = charAsset?.portrait;
+  const ph = charAsset?.placeholder;
+  av.innerHTML = '';
+  if (portrait) {
+    const img = document.createElement('img');
+    img.style.cssText = 'width:44px;height:44px;border-radius:50%;object-fit:cover;';
+    img.alt = npcName;
+    setImageWithFallback(img, portrait, ph);
+    av.style.background = color + '18';
+    av.style.color = color;
+    av.style.borderColor = color + '44';
+  } else {
+    av.textContent = letter;
+    av.style.background = color + '18';
+    av.style.color = color;
+    av.style.borderColor = color + '44';
+  }
+
   document.getElementById('talk-title').textContent = '盘问 ' + npcName;
   document.getElementById('talk-role').textContent = meta.role || '';
 

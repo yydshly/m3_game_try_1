@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="background:#0f1520">
+  <!-- 借据：纸张 + 大字 + 签名 -->
+  <defs>
+    <radialGradient id="dn1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b6fdb" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#dn1)"/>
+  <!-- 纸张 -->
+  <rect x="8" y="6" width="48" height="52" fill="#1a1f2e" stroke="#2a3050" stroke-width="1" rx="1"/>
+  <!-- 标题 -->
+  <text x="32" y="18" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8b6fdb" opacity="0.5" letter-spacing="1">借 据</text>
+  <line x1="14" y1="22" x2="50" y2="22" stroke="#2a3050" stroke-width="0.5"/>
+  <!-- 内容线 -->
+  <line x1="14" y1="27" x2="50" y2="27" stroke="#3a4a5a" stroke-width="0.7" opacity="0.5"/>
+  <line x1="14" y1="33" x2="45" y2="33" stroke="#3a4a5a" stroke-width="0.7" opacity="0.5"/>
+  <line x1="14" y1="39" x2="48" y2="39" stroke="#3a4a5a" stroke-width="0.7" opacity="0.5"/>
+  <!-- 金额 -->
+  <text x="32" y="47" text-anchor="middle" font-family="sans-serif" font-size="6" fill="#8b6fdb" opacity="0.35" letter-spacing="1">¥______</text>
+  <!-- 签名 -->
+  <line x1="20" y1="52" x2="44" y2="52" stroke="#5a6a7e" stroke-width="0.7" opacity="0.4"/>
+</svg>

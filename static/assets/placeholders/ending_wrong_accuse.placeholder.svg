@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" style="background:#0c0808">
+  <!-- 错误指认结局：沉重氛围 + 阴影 -->
+  <defs>
+    <radialGradient id="ewa1" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#8b2020" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0c0808" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#ewa1)"/>
+  <!-- 阴影笼罩效果 -->
+  <rect x="0" y="0" width="400" height="225" fill="#1a0808" opacity="0.3"/>
+  <!-- 冤屈的剪影 -->
+  <ellipse cx="200" cy="130" rx="35" ry="70" fill="#1a0a0a" stroke="#3a1a1a" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="200" cy="55" rx="17" ry="21" fill="#1a0a0a" stroke="#3a1a1a" stroke-width="1" opacity="0.5"/>
+  <!-- 锁链暗示 -->
+  <line x1="180" y1="80" x2="160" y2="130" stroke="#4a2a2a" stroke-width="1.5" opacity="0.3"/>
+  <line x1="220" y1="80" x2="240" y2="130" stroke="#4a2a2a" stroke-width="1.5" opacity="0.3"/>
+  <!-- 文字 -->
+  <text x="200" y="205" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#6a3a3a" opacity="0.5" letter-spacing="2">错误指认</text>
+</svg>

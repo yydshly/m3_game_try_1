@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" style="background:#0f1520">
+  <!-- 书房 placeholder：书架 + 书桌 + 窗户 -->
+  <defs>
+    <radialGradient id="stg1" cx="40%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#b87030" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#stg1)"/>
+  <!-- 地板 -->
+  <rect x="0" y="160" width="400" height="65" fill="#1a1f2e" opacity="0.8"/>
+  <!-- 书架 -->
+  <rect x="20" y="40" width="70" height="120" fill="none" stroke="#3a2a1a" stroke-width="1.5" rx="1"/>
+  <line x1="20" y1="65" x2="90" y2="65" stroke="#3a2a1a" stroke-width="0.8" opacity="0.6"/>
+  <line x1="20" y1="90" x2="90" y2="90" stroke="#3a2a1a" stroke-width="0.8" opacity="0.6"/>
+  <line x1="20" y1="115" x2="90" y2="115" stroke="#3a2a1a" stroke-width="0.8" opacity="0.6"/>
+  <line x1="20" y1="140" x2="90" y2="140" stroke="#3a2a1a" stroke-width="0.8" opacity="0.6"/>
+  <!-- 书桌 -->
+  <rect x="140" y="120" width="140" height="50" fill="none" stroke="#4a3020" stroke-width="1.5" rx="2"/>
+  <rect x="145" y="170" width="8" height="30" fill="#3a2515" opacity="0.6"/>
+  <rect x="267" y="170" width="8" height="30" fill="#3a2515" opacity="0.6"/>
+  <!-- 桌上纸 -->
+  <rect x="160" y="125" width="40" height="30" fill="#2a2520" opacity="0.5" rx="1"/>
+  <!-- 窗户 -->
+  <rect x="300" y="50" width="70" height="90" fill="none" stroke="#1e2d42" stroke-width="1.5" rx="2"/>
+  <line x1="335" y1="50" x2="335" y2="140" stroke="#1e2d42" stroke-width="0.8"/>
+  <line x1="300" y1="95" x2="370" y2="95" stroke="#1e2d42" stroke-width="0.8"/>
+  <!-- 保险柜暗示 -->
+  <rect x="310" y="155" width="50" height="40" fill="none" stroke="#2a2520" stroke-width="1" rx="1" opacity="0.5"/>
+  <circle cx="340" cy="175" r="5" fill="none" stroke="#2a2520" stroke-width="1" opacity="0.4"/>
+  <!-- 标签 -->
+  <text x="200" y="210" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6a7e" opacity="0.7" letter-spacing="2">周慎之书房 · 真实图片待接入</text>
+</svg>

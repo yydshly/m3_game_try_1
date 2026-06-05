@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" style="background:#0f1520">
+  <!-- 苏苏 placeholder：年轻女性轮廓 -->
+  <defs>
+    <radialGradient id="ssg" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#c05090" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="180" fill="url(#ssg)"/>
+  <ellipse cx="60" cy="170" rx="28" ry="8" fill="#c05090" opacity="0.08"/>
+  <!-- 头部 -->
+  <ellipse cx="60" cy="36" rx="19" ry="23" fill="none" stroke="#c05090" stroke-width="1.2" opacity="0.6"/>
+  <!-- 长发 -->
+  <path d="M41 25 Q60 8 79 25 L82 55 Q60 50 38 55 Z" fill="none" stroke="#c05090" stroke-width="1" opacity="0.4"/>
+  <path d="M38 55 Q35 80 40 95" fill="none" stroke="#c05090" stroke-width="0.8" opacity="0.3"/>
+  <path d="M82 55 Q85 80 80 95" fill="none" stroke="#c05090" stroke-width="0.8" opacity="0.3"/>
+  <!-- 眼睛 -->
+  <line x1="50" y1="34" x2="56" y2="34" stroke="#c05090" stroke-width="1" opacity="0.5"/>
+  <line x1="64" y1="34" x2="70" y2="34" stroke="#c05090" stroke-width="1" opacity="0.5"/>
+  <!-- 连衣裙 -->
+  <path d="M32 68 Q60 58 88 68 L92 155 Q60 160 28 155 Z" fill="none" stroke="#c05090" stroke-width="1.2" opacity="0.5"/>
+  <!-- 腰带 -->
+  <line x1="30" y1="95" x2="90" y2="95" stroke="#c05090" stroke-width="0.8" opacity="0.3"/>
+  <!-- 手臂 -->
+  <line x1="32" y1="78" x2="18" y2="115" stroke="#c05090" stroke-width="1" opacity="0.4"/>
+  <line x1="88" y1="78" x2="102" y2="115" stroke="#c05090" stroke-width="1" opacity="0.4"/>
+  <!-- 标签 -->
+  <text x="60" y="173" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#6a3a5a" opacity="0.6" letter-spacing="1">苏苏</text>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="background:#0f1520">
+  <!-- 厨师证词：卷宗/记录风格 -->
+  <defs>
+    <radialGradient id="ct1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#40a060" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#ct1)"/>
+  <!-- 档案封面 -->
+  <rect x="10" y="6" width="44" height="52" fill="#1a1f2e" stroke="#2a3a52" stroke-width="1" rx="2"/>
+  <!-- 档案标签 -->
+  <rect x="18" y="10" width="28" height="6" fill="#2a3a2a" stroke="#3a4a3a" stroke-width="0.5" rx="1" opacity="0.6"/>
+  <!-- 证词文字 -->
+  <line x1="16" y1="24" x2="48" y2="24" stroke="#3a4a3a" stroke-width="0.7" opacity="0.5"/>
+  <line x1="16" y1="30" x2="46" y2="30" stroke="#3a4a3a" stroke-width="0.7" opacity="0.5"/>
+  <line x1="16" y1="36" x2="44" y2="36" stroke="#3a4a3a" stroke-width="0.7" opacity="0.5"/>
+  <line x1="16" y1="42" x2="42" y2="42" stroke="#3a4a3a" stroke-width="0.7" opacity="0.5"/>
+  <!-- 指纹 -->
+  <ellipse cx="32" cy="52" rx="5" ry="6" fill="none" stroke="#40a060" stroke-width="0.6" opacity="0.3"/>
+  <path d="M28 49 Q32 46 36 49" fill="none" stroke="#40a060" stroke-width="0.5" opacity="0.25"/>
+  <path d="M27 52 Q32 48 37 52" fill="none" stroke="#40a060" stroke-width="0.5" opacity="0.25"/>
+  <!-- 标签 -->
+  <text x="32" y="61" text-anchor="middle" font-family="sans-serif" font-size="5" fill="#3a6a4a" opacity="0.5" letter-spacing="1">证词</text>
+</svg>

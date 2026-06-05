@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" style="background:#0f1520">
+  <!-- 陈伯 placeholder：老人轮廓，深色管家服装 -->
+  <defs>
+    <radialGradient id="cbg" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#c8963a" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="180" fill="url(#cbg)"/>
+  <!-- 身体轮廓 -->
+  <ellipse cx="60" cy="170" rx="35" ry="8" fill="#c8963a" opacity="0.08"/>
+  <!-- 头部 -->
+  <ellipse cx="60" cy="38" rx="22" ry="26" fill="none" stroke="#c8963a" stroke-width="1.2" opacity="0.6"/>
+  <!-- 头发花白 -->
+  <path d="M38 30 Q60 10 82 30" fill="none" stroke="#c8963a" stroke-width="1" opacity="0.4"/>
+  <!-- 眼睛 -->
+  <line x1="50" y1="36" x2="56" y2="36" stroke="#c8963a" stroke-width="1" opacity="0.5"/>
+  <line x1="64" y1="36" x2="70" y2="36" stroke="#c8963a" stroke-width="1" opacity="0.5"/>
+  <!-- 身体/正装 -->
+  <path d="M30 70 Q60 60 90 70 L95 150 Q60 155 25 150 Z" fill="none" stroke="#c8963a" stroke-width="1.2" opacity="0.5"/>
+  <!-- 领结 -->
+  <path d="M52 72 L60 80 L68 72" fill="none" stroke="#c8963a" stroke-width="0.8" opacity="0.4"/>
+  <!-- 手臂 -->
+  <line x1="30" y1="80" x2="18" y2="120" stroke="#c8963a" stroke-width="1" opacity="0.4"/>
+  <line x1="90" y1="80" x2="102" y2="120" stroke="#c8963a" stroke-width="1" opacity="0.4"/>
+  <!-- 标签 -->
+  <text x="60" y="173" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#5a4a2a" opacity="0.6" letter-spacing="1">陈伯</text>
+</svg>

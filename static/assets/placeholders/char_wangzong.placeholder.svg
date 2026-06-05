@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" style="background:#0f1520">
+  <!-- 王总 placeholder：中年商人轮廓 -->
+  <defs>
+    <radialGradient id="wzg" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#5090d0" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="180" fill="url(#wzg)"/>
+  <ellipse cx="60" cy="170" rx="32" ry="8" fill="#5090d0" opacity="0.08"/>
+  <!-- 头部 -->
+  <ellipse cx="60" cy="36" rx="22" ry="25" fill="none" stroke="#5090d0" stroke-width="1.2" opacity="0.6"/>
+  <!-- 头发 -->
+  <path d="M38 28 Q60 12 82 28" fill="none" stroke="#5090d0" stroke-width="1" opacity="0.4"/>
+  <!-- 眼睛 -->
+  <line x1="50" y1="34" x2="56" y2="34" stroke="#5090d0" stroke-width="1" opacity="0.5"/>
+  <line x1="64" y1="34" x2="70" y2="34" stroke="#5090d0" stroke-width="1" opacity="0.5"/>
+  <!-- 西装 -->
+  <path d="M26 68 Q60 58 94 68 L98 155 Q60 160 22 155 Z" fill="none" stroke="#5090d0" stroke-width="1.2" opacity="0.5"/>
+  <!-- 领带 -->
+  <line x1="60" y1="70" x2="60" y2="100" stroke="#5090d0" stroke-width="1" opacity="0.4"/>
+  <path d="M55 72 L60 80 L65 72" fill="none" stroke="#5090d0" stroke-width="0.8" opacity="0.4"/>
+  <!-- 手臂 -->
+  <line x1="26" y1="80" x2="12" y2="120" stroke="#5090d0" stroke-width="1" opacity="0.4"/>
+  <line x1="94" y1="80" x2="108" y2="120" stroke="#5090d0" stroke-width="1" opacity="0.4"/>
+  <!-- 标签 -->
+  <text x="60" y="173" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#2a4a6a" opacity="0.6" letter-spacing="1">王总</text>
+</svg>

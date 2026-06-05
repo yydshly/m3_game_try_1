@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="background:#0f1520">
+  <!-- 遗嘱草稿：纸张 + 文字线条 + 印章 -->
+  <defs>
+    <radialGradient id="wl1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c9a227" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0f1520" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#wl1)"/>
+  <!-- 纸张 -->
+  <rect x="8" y="6" width="48" height="52" fill="#1a1f2e" stroke="#2a3050" stroke-width="1" rx="1"/>
+  <!-- 折痕 -->
+  <line x1="8" y1="30" x2="56" y2="30" stroke="#1e2d42" stroke-width="0.5" stroke-dasharray="2,2"/>
+  <!-- 文字线条 -->
+  <line x1="14" y1="12" x2="50" y2="12" stroke="#3a4a5a" stroke-width="0.8" opacity="0.6"/>
+  <line x1="14" y1="17" x2="45" y2="17" stroke="#3a4a5a" stroke-width="0.8" opacity="0.5"/>
+  <line x1="14" y1="22" x2="48" y2="22" stroke="#3a4a5a" stroke-width="0.8" opacity="0.5"/>
+  <line x1="14" y1="27" x2="40" y2="27" stroke="#3a4a5a" stroke-width="0.8" opacity="0.5"/>
+  <!-- 签名线 -->
+  <line x1="14" y1="42" x2="36" y2="42" stroke="#c9a227" stroke-width="0.8" opacity="0.4"/>
+  <line x1="14" y1="50" x2="32" y2="50" stroke="#c9a227" stroke-width="0.8" opacity="0.4"/>
+  <!-- 印章 -->
+  <circle cx="46" cy="48" r="6" fill="none" stroke="#c04040" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="46" cy="48" r="4" fill="none" stroke="#c04040" stroke-width="0.5" opacity="0.3"/>
+  <!-- 标签 -->
+  <text x="32" y="61" text-anchor="middle" font-family="sans-serif" font-size="5" fill="#5a6a7e" opacity="0.5" letter-spacing="1">遗嘱</text>
+</svg>

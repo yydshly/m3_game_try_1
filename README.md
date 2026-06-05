@@ -97,6 +97,17 @@ Web UI 已从"调试页面"升级为**沉浸式游戏主界面原型**：
 - 林婉作为真凶，其"销毁证据"行为是规则层预设，非 AI 自由决策
 - 当前只支持《孤岛晚宴》固定剧本
 
+## 视觉资产管线
+
+游戏已建立真实视觉资产接入管线，真实图片放入 `static/assets/` 目录，manifest 控制资源映射，缺图 fallback 到 placeholder。
+
+- 资源目录：`static/assets/`（scenes / characters / evidence / endings / placeholders）
+- 资源索引：`static/assets/manifest.json`
+- 占位图：SVG 格式，缺图时自动 fallback，不影响页面功能
+- 资源验证：`python scripts/validate_assets.py`
+- 详细设计：参见 [`docs/ASSET_PIPELINE.md`](docs/ASSET_PIPELINE.md)
+- 生图提示词：参见 [`docs/IMAGE_PROMPTS.md`](docs/IMAGE_PROMPTS.md)
+
 ## 禁止事项
 
 - 不要提交 `.env`、logs/、API Key 到 Git

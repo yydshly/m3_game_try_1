@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "asset_mode": "offline_static",
+  "style": {
+    "name": "island_mystery_visual_novel",
+    "description": "中国悬疑推理视觉小说，海上孤岛古堡，暴风雨夜，低饱和电影感，暗金与深蓝色调"
+  },
+  "scenes": {
+    "大厅": {
+      "id": "hall",
+      "title": "古堡大厅",
+      "image": "/static/assets/scenes/scene_hall_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_hall.placeholder.svg",
+      "description": "古堡大厅，水晶吊灯发出昏黄的光。窗外暴风雨呼啸。"
+    },
+    "书房": {
+      "id": "study",
+      "title": "周慎之书房",
+      "image": "/static/assets/scenes/scene_study_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_study.placeholder.svg",
+      "description": "书房里文件散落，空气中有淡淡药味。保险柜半开着。"
+    },
+    "厨房": {
+      "id": "kitchen",
+      "title": "厨房",
+      "image": "/static/assets/scenes/scene_kitchen_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_kitchen.placeholder.svg",
+      "description": "厨房灶台上还留有晚餐的余温，锅里的汤已经凉透。"
+    },
+    "餐厅": {
+      "id": "dining",
+      "title": "餐厅",
+      "image": "/static/assets/scenes/scene_dining_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_dining.placeholder.svg",
+      "description": "长桌上摆着精致的餐具，暴风雨让整个房间格外昏暗。"
+    },
+    "走廊": {
+      "id": "corridor",
+      "title": "走廊",
+      "image": "/static/assets/scenes/scene_corridor_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_corridor.placeholder.svg",
+      "description": "长长的走廊尽头是一扇扇紧闭的房门，墙上的油画眼神似乎在追随你。"
+    },
+    "保安室": {
+      "id": "security",
+      "title": "保安室",
+      "image": "/static/assets/scenes/scene_security_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_security.placeholder.svg",
+      "description": "监控屏幕闪烁着微弱的光，有几个画面出现了短暂的空白。"
+    },
+    "林婉房间": {
+      "id": "linwan_room",
+      "title": "林婉房间",
+      "image": "/static/assets/scenes/scene_linwan_room_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_room.placeholder.svg",
+      "description": "房间整洁素雅，桌上有医学书籍和一支银色的钢笔。"
+    },
+    "陈伯房间": {
+      "id": "chenbo_room",
+      "title": "陈伯房间",
+      "image": "/static/assets/scenes/scene_chenbo_room_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_room.placeholder.svg",
+      "description": "房间简朴，一张老旧的床，一盏昏黄的台灯。"
+    },
+    "苏苏房间": {
+      "id": "susu_room",
+      "title": "苏苏房间",
+      "image": "/static/assets/scenes/scene_susu_room_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_room.placeholder.svg",
+      "description": "房间里弥漫着香水味，化妆台上摆着几瓶指甲油和首饰。"
+    },
+    "王总房间": {
+      "id": "wangzong_room",
+      "title": "王总房间",
+      "image": "/static/assets/scenes/scene_wangzong_room_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_room.placeholder.svg",
+      "description": "房间奢华，真皮沙发，桌上的雪茄盒半开着。"
+    },
+    "自己房间": {
+      "id": "self_room",
+      "title": "侦探房间",
+      "image": "/static/assets/scenes/scene_self_room_v1.webp",
+      "placeholder": "/static/assets/placeholders/scene_room.placeholder.svg",
+      "description": "这是侦探临时居住的房间，桌上摊着案情笔记。"
+    }
+  },
+  "characters": {
+    "陈伯": {
+      "id": "chenbo",
+      "name": "陈伯",
+      "role": "老管家",
+      "portrait": "/static/assets/characters/char_chenbo_v1.webp",
+      "placeholder": "/static/assets/placeholders/char_chenbo.placeholder.svg",
+      "position": "left",
+      "color": "#c8963a",
+      "letter": "伯"
+    },
+    "林婉": {
+      "id": "linwan",
+      "name": "林婉",
+      "role": "私人医生",
+      "portrait": "/static/assets/characters/char_linwan_v1.webp",
+      "placeholder": "/static/assets/placeholders/char_linwan.placeholder.svg",
+      "position": "right",
+      "color": "#c04040",
+      "letter": "婉"
+    },
+    "苏苏": {
+      "id": "susu",
+      "name": "苏苏",
+      "role": "侄女",
+      "portrait": "/static/assets/characters/char_susu_v1.webp",
+      "placeholder": "/static/assets/placeholders/char_susu.placeholder.svg",
+      "position": "right",
+      "color": "#c05090",
+      "letter": "苏"
+    },
+    "王总": {
+      "id": "wangzong",
+      "name": "王总",
+      "role": "商业伙伴",
+      "portrait": "/static/assets/characters/char_wangzong_v1.webp",
+      "placeholder": "/static/assets/placeholders/char_wangzong.placeholder.svg",
+      "position": "left",
+      "color": "#5090d0",
+      "letter": "王"
+    },
+    "阿福": {
+      "id": "afu",
+      "name": "阿福",
+      "role": "厨师",
+      "portrait": "/static/assets/characters/char_afu_v1.webp",
+      "placeholder": "/static/assets/placeholders/char_afu.placeholder.svg",
+      "position": "left",
+      "color": "#40a060",
+      "letter": "福"
+    },
+    "小张": {
+      "id": "xiaozhang",
+      "name": "小张",
+      "role": "保安",
+      "portrait": "/static/assets/characters/char_xiaozhang_v1.webp",
+      "placeholder": "/static/assets/placeholders/char_xiaozhang.placeholder.svg",
+      "position": "left",
+      "color": "#d08030",
+      "letter": "张"
+    }
+  },
+  "evidence": {
+    "异常的茶杯残留": {
+      "id": "teacup",
+      "title": "异常的茶杯残留",
+      "icon": "/static/assets/evidence/ev_teacup_v1.webp",
+      "placeholder": "/static/assets/placeholders/ev_teacup.placeholder.svg",
+      "source": "书房",
+      "points_to": "投毒线索"
+    },
+    "新遗嘱草稿": {
+      "id": "will",
+      "title": "新遗嘱草稿",
+      "icon": "/static/assets/evidence/ev_will_v1.webp",
+      "placeholder": "/static/assets/placeholders/ev_will.placeholder.svg",
+      "source": "书房保险柜",
+      "points_to": "遗产争夺动机"
+    },
+    "林婉的病历笔记": {
+      "id": "medical_note",
+      "title": "林婉的病历笔记",
+      "icon": "/static/assets/evidence/ev_medical_note_v1.webp",
+      "placeholder": "/static/assets/placeholders/ev_medical_note.placeholder.svg",
+      "source": "林婉房间",
+      "points_to": "真凶知情证据"
+    },
+    "借据": {
+      "id": "debt_note",
+      "title": "借据",
+      "icon": "/static/assets/evidence/ev_debt_note_v1.webp",
+      "placeholder": "/static/assets/placeholders/ev_debt_note.placeholder.svg",
+      "source": "书房保险柜",
+      "points_to": "王总债务动机"
+    },
+    "厨师阿福的证词": {
+      "id": "chef_testimony",
+      "title": "厨师阿福的证词",
+      "icon": "/static/assets/evidence/ev_chef_testimony_v1.webp",
+      "placeholder": "/static/assets/placeholders/ev_chef_testimony.placeholder.svg",
+      "source": "厨房",
+      "points_to": "女性身影目击"
+    }
+  },
+  "endings": {
+    "真凶落网": {
+      "id": "culprit_caught",
+      "title": "真凶落网",
+      "image": "/static/assets/endings/ending_culprit_caught_v1.webp",
+      "placeholder": "/static/assets/placeholders/ending_culprit_caught.placeholder.svg",
+      "description": "林婉的罪行被揭露，暴风雨终于停歇。"
+    },
+    "真凶逃脱": {
+      "id": "culprit_escape",
+      "title": "真凶逃脱",
+      "image": "/static/assets/endings/ending_culprit_escape_v1.webp",
+      "placeholder": "/static/assets/placeholders/ending_culprit_escape.placeholder.svg",
+      "description": "林婉消失在暴风雨中，谜团永远无法解开。"
+    },
+    "错误指认": {
+      "id": "wrong_accuse",
+      "title": "错误指认",
+      "image": "/static/assets/endings/ending_wrong_accuse_v1.webp",
+      "placeholder": "/static/assets/placeholders/ending_wrong_accuse.placeholder.svg",
+      "description": "真凶逍遥法外，无辜者蒙受不白之冤。"
+    }
+  }
+}
