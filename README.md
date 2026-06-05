@@ -71,8 +71,21 @@ python scripts/smoke_test.py
 | `docs/PROJECT_CONTROL.md` | 项目管控规则、AI Agent 纪律 |
 | `docs/PRODUCT_GOAL.md` | 产品目标、M3 定位、MVP 边界 |
 | `docs/UI_DRIVEN_ARCHITECTURE.md` | UI 驱动架构、数据流、API 边界 |
+| `docs/UI_REDESIGN.md` | Web UI 重构说明、页面结构、区域说明 |
 | `docs/SCENARIO.md` | 场景与 NPC 设定（真相源）|
 | `docs/ARCHITECTURE.md` | 系统架构、数据结构、约束 |
+
+## Web UI 现状与目标
+
+Web UI 已从"调试页面"升级为**沉浸式游戏主界面原型**：
+
+- 左侧**场景舞台区**：地点卡片 + NPC 在场卡片，当前地点 NPC 高亮
+- 中央**剧情/对话区**：区分旁白/NPC对话/系统/调查结果，视觉上像推理游戏
+- 右侧**状态栏**：当前状态 + 证据卡片 + 公共事件
+- 底部**动作按钮区**：按类型分组，禁用状态显示 hint
+- 对话输入使用弹层，支持预设问题快捷按钮
+
+详见 [`docs/UI_REDESIGN.md`](docs/UI_REDESIGN.md)。
 
 ## 当前已知限制
 
