@@ -800,14 +800,25 @@ header {
 #gameover.show { display: flex; }
 #gameover .card {
   background: var(--surface); border: 1px solid var(--gold-dim); border-radius: 12px;
-  padding: 38px 40px; max-width: 520px; width: 90%; text-align: center;
+  padding: 38px 40px; max-width: 600px; width: 90%; text-align: center;
   box-shadow: 0 0 60px rgba(201,162,39,0.07);
+}
+.go-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
 }
 #gameover h2 { color: var(--gold); font-size: 17px; letter-spacing: 4px; margin-bottom: 12px; }
 #gameover .verdict { font-size: 10.5px; color: var(--muted); letter-spacing: 2px; margin-bottom: 18px; }
 #gameover .summary { color: var(--text); font-size: 12.5px; line-height: 1.9; margin-bottom: 24px; white-space: pre-wrap; text-align: left; }
-#gameover button { background: var(--gold-dim); color: var(--bg); border: none; border-radius: 6px; padding: 10px 32px; font-size: 12.5px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 2px; transition: background 0.2s; }
-#gameover button:hover { background: var(--gold); }
+.go-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.go-actions button { background: var(--gold-dim); color: var(--bg); border: none; border-radius: 6px; padding: 10px 24px; font-size: 12.5px; cursor: pointer; font-family: inherit; font-weight: bold; letter-spacing: 2px; transition: background 0.2s; }
+.go-actions button:hover { background: var(--gold); }
+.go-actions button.secondary { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+.go-actions button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 
 /* ── SCENE FLASH ───────────────── */
 #scene-flash { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.35s; }
@@ -833,10 +844,14 @@ header {
 
 <div id="gameover">
   <div class="card">
+    <img id="go-image" class="go-image" alt="结局画面" style="display:none"/>
     <h2 id="go-title">结局</h2>
     <div class="verdict" id="go-verdict"></div>
     <div class="summary" id="go-summary"></div>
-    <button onclick="restartGame()">再来一局</button>
+    <div class="go-actions">
+      <button id="go-restart-btn" onclick="restartGame()">重新开始</button>
+      <button id="go-logs-btn" onclick="closeGameOverShowLogs()">查看日志</button>
+    </div>
   </div>
 </div>
 
@@ -1183,7 +1198,20 @@ function showFlash(text) {
 }
 
 function showGameOver(d) {
-  document.getElementById('go-verdict').textContent = d.verdict || '';
+  // Load ending image from manifest based on verdict
+  const endingKey = _resolveEndingKey(d.verdict || '', d.culprit || '');
+  const endingAsset = _getEndingAsset(endingKey);
+
+  const imgEl = document.getElementById('go-image');
+  if (endingAsset) {
+    setImageWithFallback(imgEl, endingAsset.image, endingAsset.placeholder);
+    imgEl.style.display = '';
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  document.getElementById('go-title').textContent = d.verdict || '结局';
+  document.getElementById('go-verdict').textContent = endingAsset?.description || d.verdict || '';
   const full = (d.summary||'') + '\n\n真凶: ' + (d.culprit||'?') +
     (d.innocent&&d.innocent.length ? '\n无辜: ' + d.innocent.join('、') : '');
   document.getElementById('go-summary').textContent = '';
@@ -1192,8 +1220,33 @@ function showGameOver(d) {
   streamText(document.getElementById('go-summary'), [full]);
 }
 
+function _resolveEndingKey(verdict, culprit) {
+  if (!verdict) return null;
+  const v = verdict.toLowerCase();
+  if (v.includes('落网') || v.includes('捕获') || v.includes('成功') || v.includes('正确')) {
+    return '真凶落网';
+  }
+  if (v.includes('逃脱') || v.includes('逃逸') || v.includes('失败') || v.includes('未指认') || v.includes('时间')) {
+    return '真凶逃脱';
+  }
+  if (v.includes('错误') || v.includes('冤枉') || v.includes('无辜') || v.includes('wrong')) {
+    return '错误指认';
+  }
+  return null;
+}
+
+function _getEndingAsset(key) {
+  if (!assetManifest || !assetManifest.endings || !key) return null;
+  return assetManifest.endings[key] || null;
+}
+
+function closeGameOverShowLogs() {
+  document.getElementById('gameover').classList.remove('show');
+}
+
 function restartGame() {
   document.getElementById('gameover').classList.remove('show');
+  document.getElementById('go-image').style.display = 'none';
   document.getElementById('story-log').innerHTML = '';
   gameEnded = false;
   if (es) { es.close(); es = null; }

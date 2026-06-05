@@ -230,7 +230,15 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
             rules.advance_phase(world)
             if world.phase == "ending":
                 judgment = DirectorAgent.judge(world, player_accusation=None)
-                events.append({"kind": "game_over", "speaker": "", "text": f"渡船已经靠岸！时间耗尽。结局: {judgment['verdict']}"})
+                events.append({
+                    "kind": "game_over",
+                    "speaker": "",
+                    "text": f"渡船已经靠岸！时间耗尽。结局: {judgment['verdict']}",
+                    "verdict": judgment.get("verdict", ""),
+                    "summary": judgment.get("summary", ""),
+                    "culprit": judgment.get("culprit", ""),
+                    "innocent": judgment.get("innocent", []),
+                })
 
         return ActionResult(ok=True, events=events)
 
@@ -252,7 +260,15 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
         events.append({"kind": "system", "speaker": "", "text": f"指认: {accused}"})
         judgment = DirectorAgent.judge(world, player_accusation=accused)
         world.phase = "ending"
-        events.append({"kind": "game_over", "speaker": "", "text": f"【结局】{judgment['verdict']} - {judgment['summary']}"})
+        events.append({
+            "kind": "game_over",
+            "speaker": "",
+            "text": f"【结局】{judgment['verdict']} - {judgment['summary']}",
+            "verdict": judgment.get("verdict", ""),
+            "summary": judgment.get("summary", ""),
+            "culprit": judgment.get("culprit", ""),
+            "innocent": judgment.get("innocent", []),
+        })
         return ActionResult(ok=True, events=events)
 
     # ---- status ----
