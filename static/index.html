@@ -139,6 +139,69 @@ header {
 
 .tl-events { margin-left: auto; font-size: 10px; color: var(--muted); white-space: nowrap; }
 
+/* ── SIDEBAR ACTION PANEL ─────────────────── */
+#side-action-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.side-action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.side-action-group-label {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  margin-bottom: 1px;
+  padding-left: 2px;
+}
+
+.side-action-btn {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-action-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201,162,39,0.08);
+}
+
+.side-action-btn:disabled,
+.side-action-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.side-action-btn.loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.side-action-hint {
+  font-size: 9px;
+  color: var(--muted);
+  padding: 1px 4px;
+  font-style: italic;
+}
+
 /* ── MAIN LAYOUT ────────────────────── */
 .game-layout {
   display: flex;
@@ -834,7 +897,7 @@ header {
     <h2>孤岛晚宴</h2>
     <p>暴风雨困住了所有人。今晨，岛主周慎之被发现死在书房。<br>你是被请来的私人侦探，天亮之前，找出真凶。</p>
     <div class="hint">
-      点击右侧<span>行动按钮</span>推进游戏<br>
+      点击右侧<span>行动面板</span>中的按钮移动、调查、盘问或推进时段<br>
       点击<span>人物卡</span>中的「盘问」开始对话<br>
       收集证据，追踪线索，在<span>对峙阶段</span>指认真凶
     </div>
@@ -922,6 +985,13 @@ header {
         <div class="stat-row"><span class="stat-label">时段</span><span class="stat-value" id="s-clock">—</span></div>
         <div class="stat-row"><span class="stat-label">阶段</span><span class="stat-value" id="s-phase">—</span></div>
         <div class="stat-row"><span class="stat-label">位置</span><span class="stat-value" id="s-location">—</span></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" id="side-actions-section">
+      <div class="sidebar-title">行动面板</div>
+      <div class="sidebar-body" id="side-action-groups">
+        <div class="ev-empty-small">加载中…</div>
       </div>
     </div>
 
@@ -1489,6 +1559,7 @@ function renderTimeline(progress, phase) {
 }
 
 function renderActions(actions) {
+  // Bottom action bar — horizontal groups
   const container = document.getElementById('action-groups');
   container.innerHTML = '';
   const talk = actions.filter(a => a.type === 'talk');
@@ -1519,18 +1590,72 @@ function renderActions(actions) {
   makeGroup('调查', inv);
   makeGroup('推进', adv);
   if (acc.length) makeGroup('指认', acc);
+
+  // Also render to right sidebar action panel
+  renderSideActionGroups(actions);
+}
+
+function renderSideActionGroups(actions) {
+  const container = document.getElementById('side-action-groups');
+  if (!container) return;
+  if (!actions || !actions.length) {
+    container.innerHTML = '<div class="ev-empty-small">暂无可用动作</div>';
+    return;
+  }
+
+  const talk = actions.filter(a => a.type === 'talk');
+  const move = actions.filter(a => a.type === 'move');
+  const inv = actions.filter(a => a.type === 'investigate');
+  const adv = actions.filter(a => a.type === 'advance');
+  const acc = actions.filter(a => a.type === 'accuse');
+
+  function makeSideGroup(label, items) {
+    if (!items.length) return;
+    const group = document.createElement('div');
+    group.className = 'side-action-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'side-action-group-label';
+    lbl.textContent = label;
+    group.appendChild(lbl);
+    for (const a of items) {
+      const btn = document.createElement('button');
+      btn.className = 'side-action-btn' + (a.enabled ? '' : ' disabled') + (actionLoading ? ' loading' : '');
+      btn.textContent = a.label;
+      btn.disabled = !a.enabled || actionLoading;
+      if (!a.enabled && a.hint) {
+        btn.title = a.hint;
+      } else if (!a.enabled) {
+        btn.title = '当前不可用';
+      }
+      btn.onclick = () => !actionLoading && doAction(a);
+      group.appendChild(btn);
+    }
+    container.appendChild(group);
+  }
+
+  makeSideGroup('移动', move);
+  makeSideGroup('盘问', talk);
+  makeSideGroup('调查', inv);
+  makeSideGroup('推进', adv);
+  if (acc.length) makeSideGroup('指认', acc);
 }
 
 // ── 动作执行 ────────────────────────────────────
 async function doAction(a) {
   if (gameEnded || actionLoading) { if (gameEnded) restartGame(); return; }
-  if (a.type === 'talk') return;
+  // Talk actions open the modal instead of sending directly
+  if (a.type === 'talk') {
+    if (a.target) openTalk(a.target);
+    else log('entry-system', '请先选择要盘问的人物。');
+    return;
+  }
   await executeAction(a.type, a.target, null);
 }
 
 async function executeAction(type, target, text) {
   actionLoading = true;
-  if (type !== 'advance') renderActions(document.querySelectorAll('.action-btn')); // optimistic disable
+  // Optimistic: clear bottom bar while loading; sidebar reflects loading via :disabled
+  if (type !== 'advance') renderActions([]);
   try {
     const r = await fetch('/api/action', {
       method: 'POST', headers: {'Content-Type':'application/json'},
