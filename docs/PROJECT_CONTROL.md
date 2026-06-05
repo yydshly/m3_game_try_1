@@ -7,8 +7,8 @@
 
 ## 1. 项目当前阶段
 
-MVP 验证后期 / 架构稳定期。
-游戏核心闭环已通，但 UI、存档槽位、Agent 调优仍有迭代空间。
+MVP 验证后期 / 架构稳定期 / UI 驱动规划期。
+游戏核心闭环已通，UI 驱动架构已定义，下一阶段重点是稳定 `/api/action` 和完善游戏主界面。
 
 ---
 
@@ -67,6 +67,8 @@ MVP 验证后期 / 架构稳定期。
 - 对话/叙事类：关闭 thinking（省 token）
 - 决策/裁判类：可开启 thinking（要质量）
 - Phase 1-3 克制用 M3，优先查表和 if/else
+- **M3 不直接决定状态变更**：M3 只能给建议或文本，最终由规则层校验后更新状态
+- **M3 不绕过 rules.py 修改 WorldState**
 
 ---
 
@@ -76,6 +78,18 @@ MVP 验证后期 / 架构稳定期。
 - **Web**：`web_api.py` 负责接收请求，调用 `dispatch()`，推送 SSE
 - 两者共享同一套 `dispatch()`，规则必须一致
 - 不允许在 `web_api.py` 里单独重写游戏规则（禁止重复逻辑）
+
+### API 入口优先级
+
+- **长期主入口**：`/api/action`（结构化 PlayerAction）
+- **兼容入口**：`/api/command`（仅解析中文命令 → PlayerAction → dispatch，不重写规则）
+- **后续所有 UI 交互优先走 `/api/action`**
+
+### UI 状态操作约束
+
+- **前端不允许绕过 Action 层直接修改 WorldState**
+- 前端只能发送 PlayerAction，所有状态变化必须由 `dispatch()` / `rules.py` / `agents.py` 完成
+- 违反示例（禁止）：前端直接 PATCH `/api/state` 修改 clock/inventory/phase
 
 ---
 
@@ -94,17 +108,20 @@ MVP 验证后期 / 架构稳定期。
 
 （已清空，本轮 P0 全部修复）
 
-### P1（重要，本轮已做）
+### P1（重要）
 
 - ✅ P1-1：添加 `docs/PROJECT_CONTROL.md`
 - ✅ P1-2：补全 `docs/README.md` 配置/运行说明
 - ✅ P1-3：创建 `scripts/smoke_test.py`
+- ✅ P1-4：新增 `docs/PRODUCT_GOAL.md`（产品目标、M3 定位、MVP 边界）
+- ✅ P1-5：新增 `docs/UI_DRIVEN_ARCHITECTURE.md`（UI 驱动架构定义）
+- ✅ P1-6：根目录新增 `README.md`
 
 ### P2（可做可不做）
 
 - P2-1：移除 `web_api.py` 中不再使用的重复 import
 - P2-2：考虑移除 `cmd_narrate` / `cmd_accuse` 等 main.py 中的冗余函数（已不再被主循环调用）
-- P2-3：`map.html` 建议删除（依赖美术资源，方向错误）
+- P2-3：**暂缓删除** `map.html`，先评估是否能作为地图 UI 原型，不直接判定为无用文件
 
 ---
 
@@ -124,6 +141,8 @@ MVP 验证后期 / 架构稳定期。
 - 每次迭代输出《执行报告》，包含：修改了什么、风险、下一轮建议
 - 禁止一次性大提交，按模块分步提交
 - API Key / Token 绝不进 Git
+- **UI 驱动是下一阶段的产品方向**：优先稳定 `/api/action`，基于 available_actions 重构游戏主界面
+- 设计时 Agent（ScenarioDesignerAgent 等）不能直接写入运行时 WorldState，必须先生成 GameBlueprint / ScenarioDraft 再经校验
 
 ---
 
