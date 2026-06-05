@@ -148,7 +148,7 @@ header {
 
 /* ── LEFT: SCENE STAGE ────────────── */
 .scene-stage {
-  width: 230px;
+  width: 248px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
@@ -159,13 +159,33 @@ header {
   position: relative;
 }
 
+.scene-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,12,20,0.18) 0%, rgba(8,12,20,0.38) 52%, rgba(8,12,20,0.62) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.scene-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top center, rgba(201,162,39,0.06) 0%, transparent 42%);
+  z-index: 0;
+  pointer-events: none;
+}
+
 .scene-bg-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.18;
+  object-position: center center;
+  opacity: 0.42;
+  filter: brightness(0.82) saturate(0.9) contrast(1.05);
   z-index: 0;
   pointer-events: none;
 }
@@ -258,18 +278,28 @@ header {
 
 .npc-top {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
   margin-bottom: 5px;
 }
 
 .npc-avatar {
-  width: 32px; height: 32px;
-  border-radius: 50%;
+  width: 46px; height: 58px;
+  border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: bold;
   flex-shrink: 0;
   border: 1px solid;
+  overflow: hidden;
+  background: rgba(255,255,255,0.03);
+}
+
+.npc-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
 }
 
 .npc-info { flex: 1; min-width: 0; }
@@ -383,7 +413,27 @@ header {
 /* dialogue */
 .entry-dialogue { display: flex; gap: 10px; margin: 5px 0; align-items: flex-start; }
 .entry-dialogue.player { flex-direction: row-reverse; }
-.avatar { width: 33px; height: 33px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; border: 1px solid; }
+.avatar {
+  width: 40px;
+  height: 52px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  flex-shrink: 0;
+  border: 1px solid;
+  overflow: hidden;
+  background: rgba(255,255,255,0.03);
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+}
 .bubble { max-width: 64%; padding: 9px 13px; border-radius: 12px; font-size: 13px; line-height: 1.7; }
 .entry-dialogue:not(.player) .bubble { background: var(--surface2); border: 1px solid var(--border); border-radius: 2px 12px 12px 12px; }
 .entry-dialogue.player .bubble { background: rgba(201,162,39,0.09); border: 1px solid rgba(201,162,39,0.2); border-radius: 12px 2px 12px 12px; }
@@ -433,13 +483,32 @@ header {
   border-radius: 7px;
   padding: 8px 10px;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   transition: border-color 0.15s;
 }
 .ev-card:hover { border-color: rgba(93,164,196,0.4); }
-.ev-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
-.ev-icon-img { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.ev-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+.ev-icon-img {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  line-height: 1;
+  object-fit: contain;
+  display: block;
+}
 .ev-info { flex: 1; min-width: 0; }
 .ev-name { font-size: 11.5px; color: var(--text); font-weight: 500; }
 .ev-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
@@ -514,8 +583,17 @@ header {
   box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 40px rgba(201,162,39,0.04);
 }
 .talk-avatar {
-  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  width: 64px; height: 84px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: bold; margin: 0 auto 8px; border: 1px solid;
+  overflow: hidden;
+  background: rgba(255,255,255,0.03);
+}
+.talk-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
 }
 .talk-title { text-align: center; color: var(--gold); font-size: 13.5px; letter-spacing: 3px; margin-bottom: 4px; }
 .talk-role { text-align: center; color: var(--muted); font-size: 10.5px; margin-bottom: 16px; }
@@ -983,7 +1061,7 @@ function renderEvidence(details) {
     const evAsset = resolveEvidenceAsset(ev.name);
     let iconContent = ev.icon || '🔍';
     if (evAsset?.icon || evAsset?.placeholder) {
-      iconContent = `<img class="ev-icon-img" alt="${ev.name}" style="width:20px;height:20px;object-fit:contain;border-radius:3px;"/>`;
+      iconContent = `<img class="ev-icon-img" alt="${ev.name}"/>`;
     }
     return `
     <div class="ev-card">
@@ -1032,12 +1110,12 @@ function renderNPCCards(npcs) {
 
     // Build avatar: try portrait image first, fallback to letter avatar
     let avatarContent;
+    let portraitImg = null;
     if (charAsset?.portrait) {
-      const img = document.createElement('img');
-      img.style.cssText = 'width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid ' + avatarColor + '44;';
-      img.alt = npc.name;
+      portraitImg = document.createElement('img');
+      portraitImg.alt = npc.name;
       const ph = charAsset.placeholder;
-      setImageWithFallback(img, charAsset.portrait, ph);
+      setImageWithFallback(portraitImg, charAsset.portrait, ph);
       avatarContent = '';
     } else {
       avatarContent = avatarLetter;
@@ -1064,6 +1142,10 @@ function renderNPCCards(npcs) {
         <div class="suspicion-label"><span>对你的警觉</span><span>${susp}</span></div>
         <div class="suspicion-bar-bg"><div class="suspicion-bar-fill" style="width:${susp}%;background:${suspColor}"></div></div>
       </div>` : ''}`;
+    if (portraitImg) {
+      const avatarHost = card.querySelector('.npc-avatar');
+      if (avatarHost) avatarHost.appendChild(portraitImg);
+    }
     container.appendChild(card);
   }
 }
@@ -1162,9 +1244,9 @@ function openTalk(npcName) {
   av.innerHTML = '';
   if (portrait) {
     const img = document.createElement('img');
-    img.style.cssText = 'width:44px;height:44px;border-radius:50%;object-fit:cover;';
     img.alt = npcName;
     setImageWithFallback(img, portrait, ph);
+    av.appendChild(img);
     av.style.background = color + '18';
     av.style.color = color;
     av.style.borderColor = color + '44';
