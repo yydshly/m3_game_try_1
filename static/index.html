@@ -148,7 +148,8 @@ header {
 
 /* ── LEFT: SCENE STAGE ────────────── */
 .scene-stage {
-  width: 248px;
+  width: 430px;
+  min-width: 380px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
@@ -192,7 +193,7 @@ header {
 
 .scene-loc-card, .scene-divider, .npc-list {
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
 
 [data-theme="hall"]    { background: linear-gradient(160deg, rgba(201,162,39,0.08) 0%, var(--surface) 50%); }
@@ -237,18 +238,162 @@ header {
   font-size: 9px;
   color: var(--muted);
   letter-spacing: 2px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(8,12,20,0.72);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  margin-top: auto;
 }
 
 .npc-list {
-  flex: 1;
+  flex: 0 0 auto;
+  max-height: 230px;
   overflow-y: auto;
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 7px;
+  background: linear-gradient(180deg, rgba(8,12,20,0.72) 0%, rgba(8,12,20,0.92) 100%);
+  backdrop-filter: blur(10px);
+}
+
+.stage-character-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 64px;
+  bottom: 248px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.stage-character {
+  position: absolute;
+  bottom: 0;
+  width: 35%;
+  max-width: 180px;
+  min-width: 120px;
+  height: 72%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  border: none;
+  background: none;
+  padding: 0;
+  transition: transform 0.25s ease, filter 0.25s ease, opacity 0.25s ease;
+}
+
+.stage-character:hover {
+  transform: translateY(-4px);
+}
+
+.stage-character.left { left: 5%; }
+.stage-character.center {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42%;
+  max-width: 210px;
+  height: 76%;
+  z-index: 2;
+}
+.stage-character.center:hover {
+  transform: translateX(-50%) translateY(-4px);
+}
+.stage-character.right { right: 5%; }
+.stage-character.solo {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44%;
+  max-width: 220px;
+  height: 76%;
+}
+.stage-character.solo:hover {
+  transform: translateX(-50%) translateY(-4px);
+}
+.stage-character.duo-left { left: 14%; width: 40%; max-width: 190px; }
+.stage-character.duo-right { right: 14%; width: 40%; max-width: 190px; }
+
+.stage-character.active {
+  filter: drop-shadow(0 0 18px rgba(201,162,39,0.35));
+}
+
+.stage-character.active .stage-character-art {
+  border-color: rgba(201,162,39,0.45);
+  background: linear-gradient(180deg, rgba(201,162,39,0.09) 0%, rgba(201,162,39,0.02) 100%);
+}
+
+.stage-character.placeholder .stage-character-art img {
+  opacity: 0.72;
+  filter: saturate(0.55) brightness(0.92);
+}
+
+.stage-character-art {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  filter: drop-shadow(0 14px 26px rgba(0,0,0,0.4));
+}
+
+.stage-character-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+}
+
+.stage-character-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px 16px 10px 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-weight: 600;
+}
+
+.stage-character-label {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(8,12,20,0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  font-size: 10px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+.stage-character.active .stage-character-label {
+  color: var(--gold);
+  border-color: rgba(201,162,39,0.26);
+}
+
+.stage-empty {
+  position: absolute;
+  inset: auto 16px 18px 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(8,12,20,0.44);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+  backdrop-filter: blur(8px);
 }
 
 /* NPC CARD */
@@ -732,6 +877,7 @@ header {
   <!-- LEFT: SCENE STAGE -->
   <div class="scene-stage" id="scene-stage" data-theme="hall">
     <img id="scene-bg-img" class="scene-bg-img" alt="" style="display:none"/>
+    <div class="stage-character-layer" id="stage-character-layer"></div>
     <div class="scene-loc-card">
       <div class="loc-name" id="sc-loc-name">—</div>
       <div class="loc-mood" id="sc-loc-mood">—</div>
@@ -847,6 +993,59 @@ function setImageWithFallback(img, primary, fallback, onError) {
   };
 }
 
+function stageSlotClass(index, count) {
+  if (count <= 1) return 'solo';
+  if (count === 2) return index === 0 ? 'duo-left' : 'duo-right';
+  return ['left', 'center', 'right'][index] || 'right';
+}
+
+function buildPresentStageNpcs(npcs, location) {
+  const direct = (npcs || []).filter(npc => npc && npc.present === true && npc.alive !== false);
+  if (direct.length) return direct.slice(0, 3);
+
+  const names = location?.present_npcs || [];
+  return names.slice(0, 3).map(name => ({
+    name,
+    public_role: NPC[name]?.role || '',
+    present: true,
+    alive: true,
+    talked: false,
+  }));
+}
+
+function mountStageCharacterArt(wrapper, npc, charAsset, meta) {
+  const portrait = charAsset?.portrait;
+  const placeholder = charAsset?.placeholder;
+  const fallbackLetter = charAsset?.letter || meta.letter || npc.name[0];
+  const art = document.createElement('div');
+  art.className = 'stage-character-art';
+
+  function showTextFallback() {
+    art.innerHTML = `<div class="stage-character-fallback">${fallbackLetter}</div>`;
+  }
+
+  if (portrait || placeholder) {
+    const img = document.createElement('img');
+    img.alt = npc.name;
+    img.src = portrait || placeholder;
+    if (!portrait && placeholder) wrapper.classList.add('placeholder');
+    img.onerror = () => {
+      if (placeholder && img.src !== new URL(placeholder, location.origin).href) {
+        img.src = placeholder;
+        wrapper.classList.add('placeholder');
+        img.onerror = showTextFallback;
+      } else {
+        showTextFallback();
+      }
+    };
+    art.appendChild(img);
+  } else {
+    showTextFallback();
+  }
+
+  return art;
+}
+
 // ── NPC 角色配置 ───────────────────────────────
 const NPC = {
   '陈伯':  { cls:'chenbo',   color:'var(--chenbo)',   letter:'伯', role:'老管家',    archetype:'忠诚谨慎' },
@@ -871,6 +1070,7 @@ const CLOCK_NAMES = ['深夜 0:00','凌晨 1:00','凌晨 2:00','凌晨 3:00','�
 
 // ── 状态 ───────────────────────────────────────
 let sessionId = null, es = null, gameEnded = false, currentNpc = null, actionLoading = false;
+let latestNpcs = [], latestLocation = null;
 
 // ── 初始化 ─────────────────────────────────────
 function startGame() {
@@ -1043,6 +1243,7 @@ function updateState(s) {
 
   // NPC cards
   renderNPCCards(s.npcs || []);
+  renderStageCharacters(s.npcs || [], s.current_location || null);
 
   // timeline
   renderTimeline(s.progress || {}, s.phase);
@@ -1150,6 +1351,44 @@ function renderNPCCards(npcs) {
   }
 }
 
+function renderStageCharacters(npcs, location) {
+  latestNpcs = npcs || [];
+  latestLocation = location || null;
+
+  const layer = document.getElementById('stage-character-layer');
+  if (!layer) return;
+  layer.innerHTML = '';
+
+  const presentNpcs = buildPresentStageNpcs(npcs, location);
+  if (!presentNpcs.length) {
+    layer.innerHTML = '<div class="stage-empty">当前地点暂无在场角色立绘。<br>移动地点或推进剧情后再查看。</div>';
+    currentNpc = null;
+    return;
+  }
+
+  if (currentNpc && !presentNpcs.some(npc => npc.name === currentNpc)) currentNpc = null;
+
+  presentNpcs.forEach((npc, index) => {
+    const meta = NPC[npc.name] || {};
+    const charAsset = resolveCharacterAsset(npc.name) || {};
+    const slotClass = stageSlotClass(index, presentNpcs.length);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'stage-character ' + slotClass + (currentNpc === npc.name ? ' active' : '');
+    button.onclick = () => openTalk(npc.name);
+    button.setAttribute('aria-label', '盘问 ' + npc.name);
+
+    const art = mountStageCharacterArt(button, npc, charAsset, meta);
+    const label = document.createElement('div');
+    label.className = 'stage-character-label';
+    label.textContent = npc.name;
+
+    button.appendChild(art);
+    button.appendChild(label);
+    layer.appendChild(button);
+  });
+}
+
 function renderTimeline(progress, phase) {
   const clockEl = document.getElementById('tl-clock');
   const maxC = progress.max_clock || 8;
@@ -1231,6 +1470,7 @@ async function executeAction(type, target, text) {
 function openTalk(npcName) {
   if (gameEnded) return;
   currentNpc = npcName;
+  renderStageCharacters(latestNpcs, latestLocation);
   const meta = NPC[npcName] || {};
   const charAsset = resolveCharacterAsset(npcName);
   const ov = document.getElementById('talk-overlay');
@@ -1272,16 +1512,20 @@ function openTalk(npcName) {
   document.getElementById('talk-input').focus();
 }
 
-function closeTalk() {
+function closeTalk(clearSelection = true) {
   document.getElementById('talk-overlay').classList.remove('show');
-  currentNpc = null;
+  if (clearSelection) currentNpc = null;
+  renderStageCharacters(latestNpcs, latestLocation);
 }
 
 document.getElementById('talk-send').onclick = () => {
   const text = document.getElementById('talk-input').value.trim();
   if (!text) return;
-  closeTalk();
-  if (currentNpc) executeAction('talk', currentNpc, text);
+  const npcName = currentNpc;
+  closeTalk(false);
+  if (npcName) executeAction('talk', npcName, text);
+  currentNpc = null;
+  renderStageCharacters(latestNpcs, latestLocation);
 };
 
 document.getElementById('talk-cancel').onclick = closeTalk;
