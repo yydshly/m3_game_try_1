@@ -1,7 +1,7 @@
 {
   "pack_version": 1,
-  "pack_name": "首批项目生成素材包",
-  "description": "第一批接入项目的真实视觉资源，来源为项目 AI 资产生成流程",
+  "pack_name": "项目生成素材包",
+  "description": "接入项目的真实视觉资源，来源为项目 AI 资产生成流程",
   "assets": [
     {
       "file": "static/assets/scenes/scene_hall_v1.webp",
@@ -38,6 +38,70 @@
     {
       "file": "static/assets/evidence/ev_teacup_v1.webp",
       "name": "异常茶杯残留图标",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/scenes/scene_kitchen_v1.webp",
+      "name": "厨房背景图",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/scenes/scene_dining_v1.webp",
+      "name": "餐厅背景图",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/scenes/scene_corridor_v1.webp",
+      "name": "走廊背景图",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/scenes/scene_security_v1.webp",
+      "name": "保安室背景图",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/characters/char_susu_v1.webp",
+      "name": "苏苏立绘",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/characters/char_wangzong_v1.webp",
+      "name": "王总立绘",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/characters/char_afu_v1.webp",
+      "name": "阿福立绘",
+      "source_name": "project-generated",
+      "author": "project AI asset generation",
+      "license": "ai-generated-project-asset",
+      "generation_prompt_file": "docs/IMAGE_PROMPTS.md"
+    },
+    {
+      "file": "static/assets/characters/char_xiaozhang_v1.webp",
+      "name": "小张立绘",
       "source_name": "project-generated",
       "author": "project AI asset generation",
       "license": "ai-generated-project-asset",
