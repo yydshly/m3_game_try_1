@@ -580,17 +580,14 @@ function connectSSE(sid) {
   });
   es.addEventListener('npc_typing', e => {
     const data = JSON.parse(e.data);
-    // 立即显示"正在打字"指示，不等待
     showTypingIndicator(data.npc);
   });
-  es.addEventListener('narrator', e => {
   es.addEventListener('system', e => {
     const data = JSON.parse(e.data);
     if (data.type === 'game_over') {
       showGameOver(data);
       return;
     }
-    // 时段变化时重新绘制
     if (data.type === 'clock') {
       updateHint(data.text);
     }
