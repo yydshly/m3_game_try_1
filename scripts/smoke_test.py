@@ -116,14 +116,35 @@ def test_status_action():
     print("[PASS] test_status_action")
 
 
-def test_advance_clock():
-    """测试：推进时段，clock 变化"""
+def test_advance_blocked_without_conditions():
+    """测试：晚宴阶段未满足盘问条件时，advance 被拒绝且 clock 不变化"""
     w = build_initial_world()
     old_clock = w.clock
     r = dispatch(w, PlayerAction(type="advance"))
-    assert r.ok
+    assert not r.ok
+    assert "还需盘问" in r.error
+    assert w.clock == old_clock
+    assert w.phase == "dinner"
+    print("[PASS] test_advance_blocked_without_conditions")
+
+
+def test_advance_after_talk_conditions():
+    """测试：晚宴阶段满足盘问条件后，advance 推进 clock 并进入 investigation"""
+    w = build_initial_world()
+    # Inject sufficient talk records to satisfy DINNER_MIN_TALKS without calling M3
+    w.player.revealed_to = {
+        "陈伯": ["已盘问"],
+        "林婉": ["已盘问"],
+        "王总": ["已盘问"],
+        "苏苏": ["已盘问"],
+        "阿福": ["已盘问"],
+    }
+    old_clock = w.clock
+    r = dispatch(w, PlayerAction(type="advance"))
+    assert r.ok, f"advance failed: {r.error}"
     assert w.clock == old_clock + 1
-    print("[PASS] test_advance_clock")
+    assert w.phase == "investigation"
+    print("[PASS] test_advance_after_talk_conditions")
 
 
 def test_valid_locations_match_rules():
@@ -219,7 +240,8 @@ def main():
         test_accuse_wrong_phase,
         test_invalid_location,
         test_status_action,
-        test_advance_clock,
+        test_advance_blocked_without_conditions,
+        test_advance_after_talk_conditions,
         test_valid_locations_match_rules,
         test_save_load_flow,
         test_ending_key_correct_accusation,
