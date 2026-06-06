@@ -202,6 +202,26 @@ header {
   font-style: italic;
 }
 
+/* Recommended next step hint */
+.next-step-hint {
+  background: rgba(201,162,39,0.06);
+  border: 1px solid rgba(201,162,39,0.18);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+}
+.next-step-title {
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 1.5px;
+  margin-bottom: 3px;
+}
+.next-step-text {
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
 /* Loading states */
 .side-action-btn.loading-this {
   opacity: 0.85;
@@ -1782,9 +1802,25 @@ function renderActions(actions) {
   renderSideActionGroups(latestActions, null);
 }
 
+function renderNextStepHint(actions) {
+  if (!actions || !actions.length) return '';
+  const talk = actions.filter(a => a.type === 'talk' && a.enabled);
+  const inv = actions.filter(a => a.type === 'investigate' && a.enabled);
+  const adv = actions.filter(a => a.type === 'advance' && a.enabled);
+  const acc = actions.filter(a => a.type === 'accuse' && a.enabled);
+  if (talk.length) return '建议先' + talk[0].label + '，收集人物关系信息。';
+  if (inv.length) return '建议先' + inv[0].label + '，寻找关键证据。';
+  if (adv.length) return '当前可' + adv[0].label + '，推进到下一阶段。';
+  if (acc.length) return '证据已足够，选择嫌疑人完成指认。';
+  return '暂无推荐动作，请查看当前目标或移动到其他地点。';
+}
+
 function renderSideActionGroups(actions, loadingType) {
   const container = document.getElementById('side-action-groups');
   if (!container) return;
+
+  // Always replace — never append
+  container.innerHTML = '';
 
   // Only show empty state when actions array is empty (not undefined/null)
   if (!actions || (Array.isArray(actions) && actions.length === 0)) {
@@ -1797,6 +1833,15 @@ function renderSideActionGroups(actions, loadingType) {
   const inv = actions.filter(a => a.type === 'investigate');
   const adv = actions.filter(a => a.type === 'advance');
   const acc = actions.filter(a => a.type === 'accuse');
+
+  // Insert recommendation hint at top
+  const hintText = renderNextStepHint(actions);
+  if (hintText) {
+    const hint = document.createElement('div');
+    hint.className = 'next-step-hint';
+    hint.innerHTML = '<div class="next-step-title">建议下一步</div><div class="next-step-text">' + hintText + '</div>';
+    container.appendChild(hint);
+  }
 
   function makeSideGroup(label, items) {
     if (!items.length) return;
@@ -1828,11 +1873,12 @@ function renderSideActionGroups(actions, loadingType) {
     container.appendChild(group);
   }
 
-  makeSideGroup('移动', move);
+  // Priority: talk > investigate > advance > accuse > move
   makeSideGroup('盘问', talk);
   makeSideGroup('调查', inv);
   makeSideGroup('推进', adv);
   if (acc.length) makeSideGroup('指认', acc);
+  makeSideGroup('移动', move);
 }
 
 // ── 动作执行 ────────────────────────────────────
@@ -1848,23 +1894,32 @@ async function doAction(a) {
   await executeAction(a.type, a.target, null);
 }
 
+function fetchWithTimeout(url, options = {}, timeoutMs = 30000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
 async function executeAction(type, target, text) {
   actionLoading = true;
   // Re-render sidebar: highlight current button, dim others
   renderSideActionGroups(latestActions, type);
+  // talk and accuse involve LLM inference — allow up to 2 minutes
+  const timeoutMs = (type === 'talk' || type === 'accuse') ? 120000 : 30000;
   try {
-    const r = await fetch('/api/action', {
+    const r = await fetchWithTimeout('/api/action', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({session_id: sessionId, type, target, text})
-    });
+    }, timeoutMs);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     if (d.state) updateState(d.state);
   } catch(e) {
-    log('entry-system', '操作失败: ' + e.message);
+    const msg = e.name === 'AbortError' ? '请求超时，请稍后重试。' : ('操作失败: ' + e.message);
+    log('entry-system', msg);
   } finally {
-    // Always restore buttons after actionLoading is cleared,
-    // whether the request succeeded, failed, or threw an exception
+    // Always restore buttons — success, error, or timeout all clear loading state
     actionLoading = false;
     renderSideActionGroups(latestActions, null);
   }
