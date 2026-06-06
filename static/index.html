@@ -2385,6 +2385,66 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 30000) {
     .finally(() => clearTimeout(timer));
 }
 
+// Render events returned by /api/action — SSE is only for future async events.
+function renderActionEvents(events, actionType) {
+  if (!Array.isArray(events) || events.length === 0) return false;
+
+  let rendered = false;
+  let hasNpcReply = false;
+
+  for (const ev of events) {
+    if (!ev || !ev.kind) continue;
+
+    if (ev.kind === 'npc') {
+      hasNpcReply = true;
+      clearTalkPending();
+      streamNPCReply({
+        npc: ev.speaker || ev.npc || '未知人物',
+        text: ev.text || ''
+      });
+      rendered = true;
+      continue;
+    }
+
+    if (ev.kind === 'game_over') {
+      clearTalkPending();
+      showGameOver(ev);
+      rendered = true;
+      continue;
+    }
+
+    if (ev.kind === 'investigate') {
+      log('entry-system narrative', ev.text || '调查完成。');
+      rendered = true;
+      continue;
+    }
+
+    if (ev.kind === 'narrator') {
+      if (ev.text) log('entry-narrator', ev.text);
+      rendered = true;
+      continue;
+    }
+
+    if (ev.kind === 'system') {
+      if (ev.text) log('entry-system', ev.text);
+      rendered = true;
+      continue;
+    }
+
+    if (ev.text) {
+      log('entry-system', ev.text);
+      rendered = true;
+    }
+  }
+
+  if (actionType === 'talk' && !hasNpcReply) {
+    clearTalkPending();
+    log('entry-system', '盘问已完成，但没有收到有效回复。');
+  }
+
+  return rendered;
+}
+
 async function executeAction(type, target, text) {
   actionLoading = true;
   // Re-render sidebar: highlight current button, dim others
@@ -2403,17 +2463,12 @@ async function executeAction(type, target, text) {
       if (type === 'talk') clearTalkPending();
       log('entry-system', d.error || '操作失败。');
     } else if (d.state) {
-      // For talk: render NPC reply from d.events immediately (SSE may not fire in this flow)
-      if (type === 'talk' && Array.isArray(d.events)) {
-        const npcEvent = d.events.find(e => e.kind === 'npc');
-        if (npcEvent) {
-          // Map backend event {speaker, text} to streamNPCReply format {npc, text}
-          clearTalkPending();
-          streamNPCReply({ npc: npcEvent.speaker, text: npcEvent.text });
-        }
+      // Render events returned by /api/action; SSE is only for future async events.
+      const hasRenderedEvents = renderActionEvents(d.events || [], type);
+      // Append narrative fallback only when no events were rendered
+      if (!hasRenderedEvents && type !== 'talk' && d.state) {
+        appendActionNarrative(type, target, d.state);
       }
-      // Append narrative feedback for non-talk actions
-      if (type !== 'talk') appendActionNarrative(type, target, d.state);
       updateState(d.state);
     }
   } catch(e) {

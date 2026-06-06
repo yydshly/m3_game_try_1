@@ -158,7 +158,36 @@ python scripts/validate_assets.py
 
 ---
 
-## 8. 验证层级速查表
+## 8. 本地服务停止
+
+如果 `python web_main.py` 后台运行时端口 8000 被占用，可执行：
+
+```bash
+python scripts/stop_dev_server.py
+```
+
+指定端口：
+
+```bash
+python scripts/stop_dev_server.py --port 8000
+```
+
+只查看不终止：
+
+```bash
+python scripts/stop_dev_server.py --port 8000 --dry-run
+```
+
+Windows 也可手动执行：
+
+```bat
+netstat -ano | findstr :8000
+taskkill /PID <PID> /T /F
+```
+
+---
+
+## 9. 验证层级速查表
 
 | 改动类型 | 必做验证 | 选做验证 | 禁止默认 |
 |---|---|---|---|
