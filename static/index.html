@@ -1819,8 +1819,10 @@ function appendSystemNarrative(text) {
 
 function appendActionNarrative(type, target, state) {
   if (type === 'move') {
-    const desc = buildLocationNarrative(target, state.current_location?.mood || '', state.npcs || []);
-    appendSystemNarrative('你来到' + target + '。' + desc);
+    const present = (state.npcs || []).filter(n => n.present && n.alive !== false);
+    const locName = state.player_location || target || state.current_location?.name || '当前位置';
+    const desc = buildLocationNarrative(locName, state.current_location?.mood || '', present);
+    appendSystemNarrative('你来到' + locName + '。' + desc);
   } else if (type === 'investigate') {
     const evCount = (state.inventory || []).length;
     const loc = state.player_location || state.current_location?.name || '当前地点';
