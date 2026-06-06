@@ -4,13 +4,30 @@
 
 ## 当前阶段
 
-MVP 验证后期 / 架构稳定期。游戏核心闭环已通，可完整跑通：对话 → 调查集证 → 对峙指认 → 结局。
+可玩 MVP 闭环验证阶段。
+
+主流程已具备：进入游戏、侦探助手引导、移动、调查、盘问、连续追问、证据收集、推进阶段、对峙指认、结局展示。
+
+当前仍是固定剧本原型，不是多剧本平台。
 
 ## 核心玩法
 
 玩家是私人侦探，被困在暴风雨中的孤岛别墅。岛主周慎之死于书房，茶杯里有异常。天亮前找出真凶。
 
 通过与 NPC 对话、调查现场、收集证据，最终在对峙阶段指认凶手。证据链是否充分影响结局。
+
+## 推荐游玩路径
+
+1. 启动 Web 服务并打开 `/`
+2. 点击"开始调查"
+3. 优先跟随"侦探助手"的建议行动
+4. 晚宴阶段：盘问至少 5 名 NPC
+5. 使用"推进时段"进入调查阶段
+6. 调查书房、厨房、林婉房间等地点收集证据
+7. 收集足够证据后进入对峙阶段
+8. 指认嫌疑人，查看结局
+
+当前固定剧本中，侦探助手会尝试带玩家完成一局。
 
 ## 技术栈
 
@@ -114,13 +131,48 @@ open_host = "localhost"
 auto_open = true
 ```
 
-如果 8000 端口被占用，修改 `config/server.toml` 中的 `port` 即可：
+#### 修改默认端口
 
-```toml
-port = 8001
+编辑：
+
+```text
+config/server.toml
 ```
 
-然后重新启动服务即可生效。
+例如：
+
+```toml
+[server]
+host = "127.0.0.1"
+port = 8001
+open_host = "localhost"
+auto_open = true
+```
+
+然后执行：
+
+```bash
+python scripts/start_dev_server.py
+```
+
+访问：
+
+```text
+http://localhost:8001
+```
+
+#### 临时覆盖端口
+
+```bash
+M3_GAME_PORT=8001 python scripts/start_dev_server.py
+```
+
+PowerShell：
+
+```powershell
+$env:M3_GAME_PORT=8001
+python scripts/start_dev_server.py
+```
 
 **配置优先级**：
 
@@ -166,6 +218,45 @@ python main.py
 python scripts/smoke_test.py
 ```
 
+## 常用脚本
+
+| 脚本 | 作用 | 常用命令 |
+|---|---|---|
+| `scripts/start_dev_server.py` | 启动 Web 服务 | `python scripts/start_dev_server.py` |
+| `scripts/stop_dev_server.py` | 停止占用配置端口的服务 | `python scripts/stop_dev_server.py` |
+| `scripts/start_web.bat` | Windows 一键启动 | `scripts\start_web.bat` |
+| `scripts/stop_web.bat` | Windows 一键停止 | `scripts\stop_web.bat` |
+| `scripts/smoke_test.py` | 后端规则与 API 冒烟测试 | `python scripts/smoke_test.py` |
+| `scripts/e2e_main_gameplay.py` | 主流程 HTTP E2E | `python scripts/e2e_main_gameplay.py` |
+| `scripts/validate_assets.py` | 验证视觉资产 manifest | `python scripts/validate_assets.py` |
+
+## 验证方式
+
+轻量规则测试：
+
+```bash
+python scripts/smoke_test.py
+```
+
+完整 HTTP 主流程测试：
+
+```bash
+python scripts/e2e_main_gameplay.py
+```
+
+资产验证：
+
+```bash
+python scripts/validate_assets.py
+```
+
+一般规则：
+
+- 只改文档：不需要跑测试
+- 改后端规则：跑 `py_compile` + `smoke_test`
+- 改主流程：跑 E2E
+- 改资产：跑 `validate_assets`
+
 ## 项目文档入口
 
 | 文档 | 作用 |
@@ -178,27 +269,83 @@ python scripts/smoke_test.py
 | `docs/SCENARIO.md` | 场景与 NPC 设定（真相源）|
 | `docs/ARCHITECTURE.md` | 系统架构、数据结构、约束 |
 
-## Web UI 现状与目标
+## Web UI 现状
 
-Web UI 已从"调试页面"升级为**沉浸式游戏主界面原型**：
+当前 `/` 主入口采用三栏结构：
 
-- **顶部 Header**：时段 + 阶段徽章 + 地点 + 证据数 + 对话数
-- **时间线栏**：时段节点进度 + 阶段进程 + 事件/证据/对话统计
-- **左侧场景舞台**：地点主题渐变背景 + 左侧彩色竖线区分场景氛围
-- **左侧 NPC 卡片**：在场高亮 / 已对话标记 / 警觉度进度条 / 字母头像 + 颜色区分角色
-- **中央剧情区**：旁白斜体 / NPC气泡 / 系统小字 / 调查卡片，消息类型视觉分层
-- **右侧证据板**：证据卡片（图标+来源+指向+重要性标签），空状态显示引导文案
-- **右侧事件日志**：公共事件记录面板
-- **底部动作栏**：按移动/盘问/调查/推进/指认分组，按钮 loading 防护
+- **左侧视觉舞台**：展示当前地点、场景背景、在场 NPC 立绘/头像
+- **中间主叙事区**：展示案情简报、当前场景说明、玩家操作记录、盘问对话、连续追问输入区、侦探助手建议
+- **右侧行动与案件区**：展示当前状态、行动面板、案件进展、持有证据、公共事件
+- **顶部状态栏**：展示时间、阶段、位置、证据数、盘问数
+- **侦探助手**：基于当前 WorldState 给出下一步建议，不调用大模型，所有建议动作仍通过 `/api/action` 执行
 
-详见 [`docs/UI_REDESIGN.md`](docs/UI_REDESIGN.md)。
+`/map` 是早期 Canvas 地图实验页，不代表当前主体验。
+
+## 常见问题排查
+
+### 端口被占用
+
+```bash
+python scripts/stop_dev_server.py
+```
+
+或修改：
+
+```text
+config/server.toml
+```
+
+把 `port = 8000` 改成其他端口。
+
+### 页面打不开
+
+确认服务已启动：
+
+```bash
+python scripts/start_dev_server.py
+```
+
+确认访问地址与 `config/server.toml` 中的 `port` 一致。
+
+### 修改前端后页面没变化
+
+浏览器强制刷新：
+
+```text
+Ctrl + F5
+```
+
+### NPC 不回复或一直显示"正在回忆"
+
+检查浏览器 Network 中 `/api/action` 是否返回 `events`，其中应包含：
+
+```json
+{"kind": "npc", "speaker": "...", "text": "..."}
+```
+
+如果 `/api/action` 一直 pending，通常是 LLM 调用慢或外部接口不可用。
+
+### MiniMax / API Key 未配置
+
+检查 `.env`：
+
+```env
+ANTHROPIC_API_KEY=...
+ANTHROPIC_BASE_URL=...
+ANTHROPIC_MODEL=MiniMax-M3
+```
+
+不要把 `.env` 提交到 Git。
 
 ## 当前已知限制
 
-- 存档为单文件（`saves/save.json`），不支持多存档槽位
-- NPC 决策（NPCDecisionAgent）触发依赖证据暴露条件，非随时可触发
-- 林婉作为真凶，其"销毁证据"行为是规则层预设，非 AI 自由决策
 - 当前只支持《孤岛晚宴》固定剧本
+- 侦探助手是规则引导，不调用大模型
+- 对峙阶段当前仍偏固定剧本逻辑，后续可根据证据动态推荐嫌疑人
+- NPC 对话依赖 MiniMax-M3，接口慢或失败时会影响盘问体验
+- 存档为单文件，不支持多存档槽位
+- `/map` 是早期实验页，不代表最终 UI
+- 当前没有账号系统、数据库、多剧本编辑器
 
 ## 视觉资产管线
 
@@ -223,3 +370,14 @@ Web UI 已从"调试页面"升级为**沉浸式游戏主界面原型**：
 - 不要引入数据库、账号系统、支付
 - 不要引入 React/Vue/任何前端 UI 框架
 - 不要替换 MiniMax-M3 调用方案
+
+## 下一阶段规划
+
+优先级建议：
+
+1. 侦探助手带路完整人工通关验收
+2. 嫌疑人线索板：展示每个嫌疑人与证据的关系
+3. 证据指向关系：解释每条证据为什么重要
+4. 结局前推理确认面板：指认前展示当前证据链
+5. 对峙阶段动态推荐：不再硬编码嫌疑人，而是根据证据计算嫌疑程度
+6. 固定剧本抽象：为后续多剧本做数据结构准备
