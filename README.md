@@ -42,28 +42,80 @@ ANTHROPIC_MODEL=MiniMax-M3
 
 **⚠️ 安全提醒：不要提交 .env，不要提交 logs/，不要在代码里硬编码 API Key。**
 
-## CLI 运行
+## 快速启动（推荐）
+
+### 1. 安装依赖
 
 ```bash
 pip install -r requirements.txt
-python main.py
 ```
 
-## Web 运行
+### 2. 配置环境变量
 
 ```bash
-pip install -r requirements.txt
+cp .env.example .env
+```
+
+编辑 `.env`，填入：
+
+```env
+ANTHROPIC_API_KEY=your_key_here
+ANTHROPIC_BASE_URL=https://api.minimaxi.com/anthropic
+ANTHROPIC_MODEL=MiniMax-M3
+```
+
+### 3. 启动 Web 游戏
+
+推荐使用启动脚本（自动检测端口、打开浏览器）：
+
+```bash
+python scripts/start_dev_server.py
+```
+
+启动后浏览器会自动打开 `http://localhost:8000`。
+
+常用参数：
+
+```bash
+python scripts/start_dev_server.py --no-open       # 不自动打开浏览器
+python scripts/start_dev_server.py --port 8001     # 指定端口
+python scripts/start_dev_server.py --stop-existing # 端口被占用时先停旧进程
+python scripts/start_dev_server.py --reload        # 启用代码热重载
+```
+
+#### Windows 一键启动
+
+双击运行或从命令行运行：
+
+```bat
+scripts\start_web.bat
+```
+
+停止服务：
+
+```bat
+scripts\stop_web.bat
+```
+
+### 4. 页面入口
+
+- 主游戏入口：`http://localhost:8000/`
+- 地图实验页：`http://localhost:8000/map`（Canvas 早期实验，仅供验证）
+
+### 手动启动
+
+仍可使用原始方式：
+
+```bash
 python web_main.py
 # 浏览器打开 http://localhost:8000
 ```
 
-入口说明：
+或 CLI 入口（无 Web UI，纯文字）：
 
-- `http://localhost:8000/` 是主游戏入口。
-- `http://localhost:8000/map` 是实验地图页。
-- `/map` 仍使用 Canvas 抽象地图，只用于地图交互验证，不代表最终 UI 品质。
-- 当前产品主体验以 `/` 的视觉小说式、资产驱动 UI 为准。
-- 真实素材优先在 `/` 中验证。
+```bash
+python main.py
+```
 
 ## 冒烟测试
 

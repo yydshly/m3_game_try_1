@@ -158,7 +158,39 @@ python scripts/validate_assets.py
 
 ---
 
-## 8. 本地服务停止
+## 8. 本地服务启动
+
+推荐使用启动脚本：
+
+```bash
+python scripts/start_dev_server.py
+```
+
+常用参数：
+
+```bash
+python scripts/start_dev_server.py --no-open       # 不自动打开浏览器
+python scripts/start_dev_server.py --port 8001     # 指定端口
+python scripts/start_dev_server.py --stop-existing # 端口被占用时先停旧进程再启动
+python scripts/start_dev_server.py --reload        # 启用 uvicorn 代码热重载
+```
+
+Windows 可使用：
+
+```bat
+scripts\start_web.bat   # 启动
+scripts\stop_web.bat    # 停止
+```
+
+启动策略：
+
+- 前台运行，`Ctrl+C` 停止。
+- 端口被占用时默认不强行杀进程，提示用户使用 `--stop-existing`。
+- 自动打开浏览器（可用 `--no-open` 禁用）。
+
+---
+
+## 9. 本地服务停止
 
 如果 `python web_main.py` 后台运行时端口 8000 被占用，可执行：
 
@@ -185,9 +217,11 @@ netstat -ano | findstr :8000
 taskkill /PID <PID> /T /F
 ```
 
+如果是通过 `scripts/start_web.bat` 启动，可直接运行 `scripts\stop_web.bat` 停止。
+
 ---
 
-## 9. 验证层级速查表
+## 10. 验证层级速查表
 
 | 改动类型 | 必做验证 | 选做验证 | 禁止默认 |
 |---|---|---|---|
