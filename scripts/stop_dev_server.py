@@ -6,6 +6,8 @@ Usage:
   python scripts/stop_dev_server.py
   python scripts/stop_dev_server.py --port 8000
   python scripts/stop_dev_server.py --port 8000 --dry-run
+
+Default port is read from config/server.toml.
 """
 
 from __future__ import annotations
@@ -17,7 +19,19 @@ import re
 import signal
 import subprocess
 import sys
+from pathlib import Path
 from typing import Set
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_default_port() -> int:
+    try:
+        sys.path.insert(0, str(ROOT))
+        from game.server_config import load_server_config
+        return load_server_config().port
+    except Exception:
+        return 8000
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess:
@@ -89,17 +103,26 @@ def stop_pid(pid: int, dry_run: bool) -> None:
 
 
 def main() -> int:
+    default_port = _load_default_port()
     parser = argparse.ArgumentParser(description="Stop the local dev server on a given TCP port.")
-    parser.add_argument("--port", type=int, default=8000, help="TCP port to free (default: 8000)")
-    parser.add_argument("--dry-run", action="store_true", help="Only print what would be stopped, don't actually stop it")
+    parser.add_argument(
+        "--port", type=int, default=None,
+        help=f"TCP port to free (default: {default_port} from config/server.toml)"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Only print what would be stopped, don't actually stop it"
+    )
     args = parser.parse_args()
 
-    pids = find_pids(args.port)
+    port = args.port if args.port is not None else default_port
+
+    pids = find_pids(port)
     if not pids:
-        print(f"[OK] no listening process found on port {args.port}")
+        print(f"[OK] no listening process found on port {port}")
         return 0
 
-    print(f"[INFO] found {len(pids)} process(es) on port {args.port}: {sorted(pids)}")
+    print(f"[INFO] found {len(pids)} process(es) on port {port}: {sorted(pids)}")
     for pid in sorted(pids):
         stop_pid(pid, args.dry_run)
 

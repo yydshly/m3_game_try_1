@@ -4,11 +4,15 @@ Start the local web dev server for 孤岛晚宴.
 
 Usage:
   python scripts/start_dev_server.py
-  python scripts/start_dev_server.py --port 8000
-  python scripts/start_dev_server.py --host 127.0.0.1 --port 8000
+  python scripts/start_dev_server.py --port 8001
+  python scripts/start_dev_server.py --host 0.0.0.0 --port 8001
   python scripts/start_dev_server.py --stop-existing
   python scripts/start_dev_server.py --no-open
   python scripts/start_dev_server.py --reload
+
+Configuration (config/server.toml):
+  host, port, open_host, auto_open
+  CLI args > environment variables > config file > defaults
 """
 
 from __future__ import annotations
@@ -28,6 +32,12 @@ def _import_stop_helpers():
     sys.path.insert(0, str(ROOT))
     from scripts.stop_dev_server import find_pids, stop_pid
     return find_pids, stop_pid
+
+
+def _load_config():
+    sys.path.insert(0, str(ROOT))
+    from game.server_config import ServerConfig, load_server_config
+    return ServerConfig, load_server_config
 
 
 def _check_requirements() -> None:
@@ -51,12 +61,13 @@ def _check_requirements() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="启动孤岛晚宴本地 Web 服务")
     parser.add_argument(
-        "--host", default="127.0.0.1",
-        help="监听地址（默认 127.0.0.1）"
+        "--host",
+        default=None,
+        help="监听地址（默认从 config/server.toml 读取）"
     )
     parser.add_argument(
-        "--port", type=int, default=8000,
-        help="监听端口（默认 8000）"
+        "--port", type=int, default=None,
+        help="监听端口（默认从 config/server.toml 读取）"
     )
     parser.add_argument(
         "--stop-existing", action="store_true",
@@ -75,29 +86,37 @@ def main() -> int:
     os.chdir(ROOT)
     _check_requirements()
 
+    ServerConfig, load_server_config = _load_config()
+    base_cfg = load_server_config()
+
+    # CLI args override config file
+    host = args.host if args.host is not None else base_cfg.host
+    port = args.port if args.port is not None else base_cfg.port
+    auto_open = base_cfg.auto_open and not args.no_open
+    browser_url = f"http://{base_cfg.open_host}:{port}"
+
     find_pids, stop_pid = _import_stop_helpers()
-    pids = find_pids(args.port)
+    pids = find_pids(port)
 
     if pids:
         if args.stop_existing:
-            print(f"[INFO] 端口 {args.port} 被 PID: {sorted(pids)} 占用")
+            print(f"[INFO] 端口 {port} 被 PID: {sorted(pids)} 占用")
             print("[INFO] 正在停止旧进程...")
             for pid in sorted(pids):
                 stop_pid(pid, dry_run=False)
             time.sleep(1.0)
         else:
-            print(f"[ERROR] 端口 {args.port} 已被占用（PID: {sorted(pids)}）")
+            print(f"[ERROR] 端口 {port} 已被占用（PID: {sorted(pids)}）")
             print("可选择：")
-            print(f"  python scripts/stop_dev_server.py --port {args.port}")
-            print(f"  python scripts/start_dev_server.py --port {args.port} --stop-existing")
+            print(f"  python scripts/stop_dev_server.py --port {port}")
+            print(f"  python scripts/start_dev_server.py --port {port} --stop-existing")
             print(f"  python scripts/start_dev_server.py --port 8001")
             return 1
 
-    url = f"http://localhost:{args.port}"
     print("=" * 60)
     print("  《孤岛晚宴》Web 版启动中")
-    print(f"  主入口: {url}")
-    print(f"  地图实验页: {url}/map")
+    print(f"  主入口: {browser_url}")
+    print(f"  地图实验页: {browser_url}/map")
     print("  停止服务: Ctrl+C")
     print("=" * 60)
 
@@ -107,21 +126,21 @@ def main() -> int:
         "uvicorn",
         "web_main:app",
         "--host",
-        args.host,
+        host,
         "--port",
-        str(args.port),
+        str(port),
     ]
     if args.reload:
         cmd.append("--reload")
 
-    if not args.no_open:
+    if auto_open:
 
         def open_later():
             import threading
 
             def _open():
                 time.sleep(1.2)
-                webbrowser.open(url)
+                webbrowser.open(browser_url)
 
             threading.Thread(target=_open, daemon=True).start()
 

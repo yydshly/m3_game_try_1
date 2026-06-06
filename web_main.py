@@ -3,7 +3,7 @@ web_main.py — Phase 5 Web 入口
 
 启动方式:
     python web_main.py
-    然后打开浏览器访问 http://localhost:8000
+    配置见 config/server.toml
 
 FastAPI + uvicorn 自动 reload,
 静态文件由 FastAPI 直接服务(不需要 nginx)。
@@ -23,6 +23,7 @@ from game.web_api import app
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from game.server_config import load_server_config
 
 # 挂载静态文件
 _STATIC = _ROOT / "static"
@@ -47,15 +48,16 @@ async def map_page():
 
 
 if __name__ == "__main__":
+    cfg = load_server_config()
     print("=" * 50)
     print("  《孤岛晚宴》Web 版")
-    print("  对话版: http://localhost:8000")
-    print("  地图版: http://localhost:8000/map")
+    print(f"  对话版: {cfg.browser_url}")
+    print(f"  地图版: {cfg.browser_url}/map")
     print("  按 Ctrl+C 停止")
     print("=" * 50)
     uvicorn.run(
         "web_main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=cfg.host,
+        port=cfg.port,
         reload=False,
     )

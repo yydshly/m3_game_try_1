@@ -27,8 +27,16 @@ import time
 import socket
 import subprocess
 import requests
+from pathlib import Path
 
-BASE_URL = "http://localhost:8000"
+# 读取 config/server.toml 中的端口配置，支持 M3_GAME_BASE_URL 环境变量覆盖
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from game.server_config import load_server_config
+    BASE_URL = os.getenv("M3_GAME_BASE_URL", load_server_config().browser_url)
+except Exception:
+    BASE_URL = os.getenv("M3_GAME_BASE_URL", "http://localhost:8000")
+
 SERVER_STARTUP_TIMEOUT = 30   # seconds to wait for server to become available
 SERVER_STARTUP_POLL = 0.5     # poll interval while waiting
 

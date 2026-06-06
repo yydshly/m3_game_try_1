@@ -72,7 +72,7 @@ ANTHROPIC_MODEL=MiniMax-M3
 python scripts/start_dev_server.py
 ```
 
-启动后浏览器会自动打开 `http://localhost:8000`。
+启动后浏览器会自动打开 `http://localhost:8000`（默认）。
 
 常用参数：
 
@@ -99,8 +99,51 @@ scripts\stop_web.bat
 
 ### 4. 页面入口
 
-- 主游戏入口：`http://localhost:8000/`
+- 主游戏入口：`http://localhost:8000/`（端口以 `config/server.toml` 为准）
 - 地图实验页：`http://localhost:8000/map`（Canvas 早期实验，仅供验证）
+
+### 5. Web 服务配置
+
+默认配置文件：`config/server.toml`
+
+```toml
+[server]
+host = "127.0.0.1"
+port = 8000
+open_host = "localhost"
+auto_open = true
+```
+
+如果 8000 端口被占用，修改 `config/server.toml` 中的 `port` 即可：
+
+```toml
+port = 8001
+```
+
+然后重新启动服务即可生效。
+
+**配置优先级**：
+
+```
+CLI 参数 > 环境变量 > config/server.toml > 内置默认值
+```
+
+**环境变量覆盖**：
+
+```bash
+M3_GAME_HOST=0.0.0.0          # uvicorn 监听地址
+M3_GAME_PORT=8001             # uvicorn 监听端口
+M3_GAME_OPEN_HOST=localhost    # 浏览器打开使用的 host
+M3_GAME_AUTO_OPEN=false        # 禁用自动打开浏览器
+M3_GAME_BASE_URL=http://...    # E2E/测试脚本使用的基址
+```
+
+Windows PowerShell：
+
+```powershell
+$env:M3_GAME_PORT=8001
+python scripts/start_dev_server.py
+```
 
 ### 手动启动
 
@@ -108,7 +151,7 @@ scripts\stop_web.bat
 
 ```bash
 python web_main.py
-# 浏览器打开 http://localhost:8000
+# 浏览器打开 http://localhost:8000（以 config/server.toml 为准）
 ```
 
 或 CLI 入口（无 Web UI，纯文字）：

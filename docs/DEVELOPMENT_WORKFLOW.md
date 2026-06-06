@@ -188,6 +188,20 @@ scripts\stop_web.bat    # 停止
 - 端口被占用时默认不强行杀进程，提示用户使用 `--stop-existing`。
 - 自动打开浏览器（可用 `--no-open` 禁用）。
 
+**服务配置文件**：默认读取 `config/server.toml`，可修改默认端口：
+
+```toml
+[server]
+host = "127.0.0.1"
+port = 8001
+open_host = "localhost"
+auto_open = true
+```
+
+配置优先级：`CLI 参数 > 环境变量 > config/server.toml > 内置默认值`
+
+常用环境变量：`M3_GAME_HOST`、`M3_GAME_PORT`、`M3_GAME_OPEN_HOST`、`M3_GAME_AUTO_OPEN`、`M3_GAME_BASE_URL`
+
 ---
 
 ## 9. 本地服务停止
