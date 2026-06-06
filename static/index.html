@@ -963,11 +963,24 @@ header {
 /* ── ONBOARDING ─────────────────── */
 #onboarding {
   position: fixed; inset: 0;
-  background: rgba(8,12,20,0.96);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(201,162,39,0.12) 0%, transparent 34%),
+    linear-gradient(135deg, rgba(24,32,48,0.92) 0%, rgba(8,12,20,0.88) 45%, rgba(3,6,12,0.96) 100%);
   display: flex; align-items: center; justify-content: center;
   z-index: 200;
 }
+#onboarding::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(201,162,39,0.08) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 100%);
+  background-size: 96px 96px;
+  opacity: 0.18;
+  pointer-events: none;
+}
 #onboarding .card {
+  position: relative; z-index: 1;
   background: var(--surface); border: 1px solid rgba(201,162,39,0.22);
   border-radius: 12px; padding: 40px 46px; max-width: 450px; text-align: center;
   box-shadow: 0 0 80px rgba(201,162,39,0.05);
@@ -1296,9 +1309,17 @@ let latestNpcs = [], latestLocation = null;
 let latestActions = []; // 缓存最新可用动作，用于 loading 状态恢复
 
 // ── 初始化 ─────────────────────────────────────
-function startGame() {
-  document.getElementById('onboarding').style.display = 'none';
-  initGame();
+async function startGame() {
+  console.log('[StartGame] click');
+  const onboarding = document.getElementById('onboarding');
+  if (onboarding) onboarding.style.display = 'none';
+  try {
+    await initGame();
+  } catch (e) {
+    console.error('[StartGame] failed', e);
+    log('entry-system', '开始调查失败: ' + e.message);
+    if (onboarding) onboarding.style.display = 'flex';
+  }
 }
 
 async function initGame() {
@@ -1880,7 +1901,6 @@ function openTalk(npcName) {
   renderStageCharacters(latestNpcs, latestLocation);
   const meta = NPC[npcName] || {};
   const charAsset = resolveCharacterAsset(npcName);
-  const ov = document.getElementById('talk-overlay');
   const av = document.getElementById('talk-avatar');
   const color = charAsset?.color || meta.color || 'var(--muted)';
   const letter = charAsset?.letter || meta.letter || npcName[0];
