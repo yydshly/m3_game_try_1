@@ -919,6 +919,25 @@ header {
 .player-label { color: var(--gold) !important; }
 .typing-cursor { display: inline-block; width: 2px; height: 13px; background: var(--gold); vertical-align: middle; animation: blink 0.7s step-end infinite; margin-left: 2px; }
 @keyframes blink { 50% { opacity: 0; } }
+
+/* question entry — player question bubble in story log */
+.question-entry .bubble {
+  background: rgba(201,162,39,0.08);
+  border: 1px solid rgba(201,162,39,0.22);
+}
+.question-text {
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+/* talk pending — waiting indicator for NPC reply */
+.talk-pending {
+  color: var(--muted);
+  font-style: italic;
+  border-left: 2px solid rgba(201,162,39,0.3);
+  padding-left: 10px;
+  opacity: 0.85;
+}
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -940,10 +959,79 @@ header {
 
 /* Scrollable action panel — prevents buttons from pushing evidence below fold */
 #side-actions-section {
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 300px;
+  overflow: hidden;
 }
 #side-action-groups {
-  max-height: 300px;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* Compact status line — single row, minimal height */
+.compact-status-section {
+  flex: 0 0 auto;
+}
+
+.compact-status-line {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.compact-status-line #s-phase,
+.compact-status-line #s-location {
+  color: var(--text);
+}
+
+.compact-status-line #s-clock {
+  color: var(--gold);
+}
+
+/* Case progress — compact, auto height */
+#case-progress-section {
+  flex: 0 0 auto;
+}
+
+#case-progress-section .sidebar-body {
+  padding: 8px 10px;
+}
+
+.case-stat {
+  font-size: 10.5px;
+}
+
+.case-hint {
+  font-size: 10.5px;
+  line-height: 1.45;
+  padding: 5px 7px;
+}
+
+/* Evidence — limited height but scrollable */
+#evidence-section {
+  flex: 0 0 auto;
+  max-height: 170px;
+}
+
+#ev-container {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+/* Public events — minimal height */
+#s-events-section {
+  flex: 0 0 auto;
+  max-height: 90px;
+}
+
+#s-events-section .sidebar-body {
+  max-height: 65px;
   overflow-y: auto;
 }
 
@@ -1279,29 +1367,18 @@ header {
 
   <!-- RIGHT: SIDEBAR -->
   <div class="right-sidebar">
-    <div class="sidebar-section" style="flex-shrink:0">
-      <div class="sidebar-title">当前状态</div>
-      <div class="sidebar-body">
-        <div class="stat-row"><span class="stat-label">时段</span><span class="stat-value" id="s-clock">—</span></div>
-        <div class="stat-row"><span class="stat-label">阶段</span><span class="stat-value" id="s-phase">—</span></div>
-        <div class="stat-row"><span class="stat-label">位置</span><span class="stat-value" id="s-location">—</span></div>
+    <!-- Compact single-line status — minimal footprint, just key info -->
+    <div class="sidebar-section compact-status-section">
+      <div class="compact-status-line">
+        <span id="s-phase">—</span>
+        <span>·</span>
+        <span id="s-clock">—</span>
+        <span>·</span>
+        <span id="s-location">—</span>
       </div>
     </div>
 
-    <div class="sidebar-section" id="case-progress-section">
-      <div class="sidebar-title">案件进展</div>
-      <div class="sidebar-body">
-        <div id="case-progress"></div>
-      </div>
-    </div>
-
-    <div class="sidebar-section" id="evidence-section">
-      <div class="sidebar-title">持有证据</div>
-      <div class="sidebar-body" id="ev-container">
-        <div class="ev-empty">尚未获得证据。<br>移动到关键地点或盘问相关人物，可能发现新的线索。</div>
-      </div>
-    </div>
-
+    <!-- Action panel — primary interaction zone, placed first for prominence -->
     <div class="sidebar-section" id="side-actions-section">
       <div class="sidebar-title">行动面板</div>
       <div class="sidebar-body" id="side-action-groups">
@@ -1309,7 +1386,24 @@ header {
       </div>
     </div>
 
-    <div class="sidebar-section flexible">
+    <!-- Case progress — compact guide -->
+    <div class="sidebar-section" id="case-progress-section">
+      <div class="sidebar-title">案件进展</div>
+      <div class="sidebar-body">
+        <div id="case-progress"></div>
+      </div>
+    </div>
+
+    <!-- Evidence — compressed but visible -->
+    <div class="sidebar-section" id="evidence-section">
+      <div class="sidebar-title">持有证据</div>
+      <div class="sidebar-body" id="ev-container">
+        <div class="ev-empty">尚未获得证据。调查关键地点或盘问相关人物，可能发现新线索。</div>
+      </div>
+    </div>
+
+    <!-- Public events — minimal at bottom -->
+    <div class="sidebar-section" id="s-events-section">
       <div class="sidebar-title">公共事件</div>
       <div class="sidebar-body" id="s-events">
         <div class="ev-empty-small">暂无公共事件</div>
@@ -1514,6 +1608,57 @@ let sessionId = null, es = null, gameEnded = false, currentNpc = null, actionLoa
 let openingBriefingShown = false; // 防止案情简报重复插入
 let latestNpcs = [], latestLocation = null;
 let latestActions = []; // 缓存最新可用动作，用于 loading 状态恢复
+let activeTalkPendingEl = null; // 盘问等待状态元素
+
+// ── HTML 转义 ──────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+// ── 盘问记录 ────────────────────────────────────
+function appendPlayerQuestion(npcName, text) {
+  const logEl = document.getElementById('story-log');
+  if (!logEl || !npcName || !text) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'entry-dialogue player question-entry';
+
+  wrapper.innerHTML =
+    '<div class="bubble">' +
+      '<div class="speaker-name player-label">你盘问 ' + escapeHtml(npcName) + '</div>' +
+      '<div class="question-text">' + escapeHtml(text) + '</div>' +
+    '</div>';
+
+  logEl.appendChild(wrapper);
+  scroll();
+}
+
+function appendTalkPending(npcName) {
+  const logEl = document.getElementById('story-log');
+  if (!logEl) return null;
+
+  clearTalkPending();
+
+  const el = document.createElement('div');
+  el.className = 'entry-system talk-pending';
+  el.textContent = npcName + ' 正在回忆与斟酌回答……';
+  logEl.appendChild(el);
+  activeTalkPendingEl = el;
+  scroll();
+  return el;
+}
+
+function clearTalkPending() {
+  if (activeTalkPendingEl && activeTalkPendingEl.parentNode) {
+    activeTalkPendingEl.parentNode.removeChild(activeTalkPendingEl);
+  }
+  activeTalkPendingEl = null;
+}
 
 // ── 初始化 ─────────────────────────────────────
 async function startGame() {
@@ -1578,6 +1723,7 @@ function streamNarrator(chunks) {
 }
 
 function streamNPCReply(data) {
+  clearTalkPending();
   const npc = data.npc, meta = NPC[npc] || {};
   const charAsset = resolveCharacterAsset(npc);
   const color = charAsset?.color || meta.color || 'var(--muted)';
@@ -1940,7 +2086,7 @@ function updateState(s) {
 function renderEvidence(details) {
   const container = document.getElementById('ev-container');
   if (!details || details.length === 0) {
-    container.innerHTML = '<div class="ev-empty">尚未获得证据。<br>移动到关键地点或盘问相关人物，可能发现新的线索。</div>';
+    container.innerHTML = '<div class="ev-empty">尚未获得证据。调查关键地点或盘问相关人物，可能发现新线索。</div>';
     return;
   }
   container.innerHTML = '<div class="evidence-cards">' + details.map(ev => {
@@ -2211,7 +2357,11 @@ function renderSideActionGroups(actions, loadingType) {
   makeSideGroup('盘问', talk);
   makeSideGroup('调查', inv);
   makeSideGroup('推进', adv);
-  if (acc.length) makeSideGroup('指认', acc);
+  // Only show accuse group when there are enabled buttons (confrontation phase)
+  const enabledAcc = acc.filter(a => a.enabled);
+  if (enabledAcc.length) {
+    makeSideGroup('指认', enabledAcc);
+  }
   makeSideGroup('地点移动', move);
 }
 
@@ -2250,6 +2400,7 @@ async function executeAction(type, target, text) {
     const d = await r.json();
     // Handle backend-reported errors (e.g. advance gated by conditions)
     if (!d.ok) {
+      if (type === 'talk') clearTalkPending();
       log('entry-system', d.error || '操作失败。');
     } else if (d.state) {
       // Append narrative feedback for non-talk actions (talk gets SSE npc_reply)
@@ -2257,6 +2408,7 @@ async function executeAction(type, target, text) {
       updateState(d.state);
     }
   } catch(e) {
+    if (type === 'talk') clearTalkPending();
     const msg = e.name === 'AbortError' ? '请求超时，请稍后重试。' : ('操作失败: ' + e.message);
     log('entry-system', msg);
   } finally {
@@ -2345,9 +2497,16 @@ function closeTalk(clearSelection = true) {
 document.getElementById('talk-send').onclick = () => {
   const text = document.getElementById('talk-input').value.trim();
   if (!text) return;
+
   const npcName = currentNpc;
   closeTalk(false);
-  if (npcName) executeAction('talk', npcName, text);
+
+  if (npcName) {
+    appendPlayerQuestion(npcName, text);
+    appendTalkPending(npcName);
+    executeAction('talk', npcName, text);
+  }
+
   currentNpc = null;
   renderStageCharacters(latestNpcs, latestLocation);
 };
