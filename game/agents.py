@@ -43,6 +43,85 @@ def _format_secrets(secrets: list[str]) -> str:
     return "\n".join(f"- {s}" for s in secrets)
 
 
+# Phase name map for dialogue context (frontend-independent)
+_PHASE_NAME: dict[str, str] = {
+    "dinner": "晚宴",
+    "investigation": "调查",
+    "confrontation": "对峙",
+    "ending": "结局",
+}
+
+
+def _format_player_inventory(world: WorldState) -> str:
+    """Format player's collected evidence for NPC prompt context."""
+    if not world.player.inventory:
+        return "玩家尚未明确展示任何证据。"
+    lines = []
+    for ev in world.player.inventory:
+        meta = rules.EVIDENCE_METADATA.get(ev, {})
+        source = meta.get("source", "未知来源")
+        points_to = meta.get("points_to", "未知指向")
+        level = meta.get("level", "线索")
+        lines.append(f"- {ev}｜来源:{source}｜指向:{points_to}｜等级:{level}")
+    return "\n".join(lines)
+
+
+def _format_message_hits(world: WorldState, player_message: str) -> str:
+    """Identify which known evidence/persons/locations the player mentions."""
+    hits = []
+    for ev in world.player.inventory:
+        if ev in player_message:
+            hits.append(f"玩家正在追问已持有证据: {ev}")
+    for name in world.npcs.keys():
+        if name in player_message:
+            hits.append(f"玩家提到了人物: {name}")
+    for loc in rules.LOCATION_DESCRIPTIONS.keys():
+        if loc in player_message:
+            hits.append(f"玩家提到了地点: {loc}")
+    return "\n".join(hits) if hits else "玩家这句话没有直接命中已知证据、人物或地点。"
+
+
+def _format_visible_case_context(
+    npc: NPCState, world: WorldState, player_message: str
+) -> str:
+    """Build visible-case block: only what the player already knows."""
+    import game.rules as rules
+
+    phase_name = _PHASE_NAME.get(world.phase, world.phase)
+    clock_str = rules.clock_name(world.clock)
+    player_loc = world.player.location
+
+    npc_loc = rules.npc_location_at(npc.name, world.clock)
+
+    # Who is at player's location
+    all_locs = rules.all_npc_locations(world)
+    present_here = [
+        name for name, loc in all_locs.items() if loc == player_loc
+    ]
+    present_str = "、".join(present_here) if present_here else "无"
+
+    # Recent public events (last 3)
+    recent = sorted(world.public_events, key=lambda e: e.clock, reverse=True)[:3]
+    if recent:
+        events_lines = "\n".join(f"- {e.description}" for e in reversed(recent))
+    else:
+        events_lines = "暂无公共事件"
+
+    inventory_str = _format_player_inventory(world)
+    hits_str = _format_message_hits(world, player_message)
+
+    return (
+        f"当前阶段: {phase_name}\n"
+        f"当前时段: {clock_str}\n"
+        f"玩家当前位置: {player_loc}\n"
+        f"你的当前位置: {npc_loc}\n"
+        f"玩家所在地点在场人物: {present_str}\n"
+        f"---证据---\n{inventory_str}\n"
+        f"---最近公共事件---\n{events_lines}\n"
+        f"---玩家问题关键词命中---\n{hits_str}"
+    )
+
+
 class NPCDialogueAgent:
     """单个 NPC 的对话 Agent。
 
@@ -83,6 +162,7 @@ class NPCDialogueAgent:
         # === 拼 prompt:严格只用该 NPC 自己的信息 ===
         # 这里是信息隔离的关键执行点,任何修改务必看一遍 ARCHITECTURE.md §5
         template = _load_prompt(cls.PROMPT_NAME)
+        visible_case_context = _format_visible_case_context(npc, world, player_message)
         user_prompt = template.format(
             name=npc.name,
             public_role=npc.public_role,
@@ -93,6 +173,7 @@ class NPCDialogueAgent:
             memory=_format_memory(npc.memory),
             suspicion=npc.suspicion_of_player,
             player_message=player_message,
+            visible_case_context=visible_case_context,
         )
         system_prompt = (
             "你是一个完全沉浸在中国文字推理游戏中的真实角色。"
@@ -111,7 +192,7 @@ class NPCDialogueAgent:
             )
         except LLMError as e:
             # 不让一次 M3 抽风崩掉整局游戏(AGENTS.md 代码规范)
-            print(f"[llm warn] {npc.name} 的对话调用失败,使用降级回应: {e}")
+            print(f"[llm warn] npc_dialogue failed npc={npc.name} phase={world.phase} clock={world.clock}: {e}")
             reply = cls.FALLBACK_REPLY
 
         # === 写回私有记忆 ===
