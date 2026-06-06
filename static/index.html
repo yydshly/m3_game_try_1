@@ -2708,6 +2708,7 @@ async function executeAction(type, target, text) {
     // Always restore buttons — success, error, or timeout all clear loading state
     actionLoading = false;
     renderSideActionGroups(latestActions, null);
+    if (latestGuide) renderGuide(latestGuide);
   }
 }
 

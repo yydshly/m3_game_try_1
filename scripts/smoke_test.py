@@ -334,6 +334,93 @@ def test_guide_confrontation_returns_accuse_linwan():
     print("[PASS] test_guide_confrontation_returns_accuse_linwan")
 
 
+def test_guide_talk_requires_same_location():
+    """测试：guide 推荐 talk 时，NPC 必须在玩家当前地点；不在时应推荐 move"""
+    from game.web_api import _build_guide
+    w = build_initial_world()
+    # 玩家在大厅，陈伯在书房（clock=0）
+    assert w.player.location == "大厅"
+    # dinner 阶段，大厅无人，guide 应推荐 move 而非直接 talk
+    guide = _build_guide(w)
+    # Should be a move to somewhere, not a talk
+    assert guide["action"]["type"] == "move", \
+        f"Expected move when no NPCs present, got {guide['action']['type']}"
+    print("[PASS] test_guide_talk_requires_same_location")
+
+
+def test_guide_investigation_gets_will_by_study_investigate():
+    """测试：investigation 阶段缺新遗嘱时，guide 推荐去书房调查"""
+    from game.web_api import _build_guide
+    w = build_initial_world()
+    w.phase = "investigation"
+    w.player.location = "大厅"
+    g = _build_guide(w)
+    # Should recommend moving to study to get 新遗嘱草稿
+    assert g["action"]["type"] == "move", f"Expected move to study, got {g['action']['type']}"
+    assert g["action"]["target"] == "书房", f"Expected 书房, got {g['action']['target']}"
+
+    # When already in study, should recommend investigate
+    w.player.location = "书房"
+    g = _build_guide(w)
+    assert g["action"]["type"] == "investigate", f"Expected investigate in study, got {g['action']['type']}"
+    print("[PASS] test_guide_investigation_gets_will_by_study_investigate")
+
+
+def test_guide_talk_chenbo_when_in_study():
+    """测试：在书房时，guide 推荐盘问陈伯（陈伯在书房 clock=0）"""
+    from game.web_api import _build_guide
+    w = build_initial_world()
+    w.phase = "investigation"
+    w.player.location = "书房"
+    # 新遗嘱草稿 already obtained, now need 茶杯残留
+    w.player.inventory.append("新遗嘱草稿")
+    g = _build_guide(w)
+    # Should recommend talking to 陈伯 (who is in 书房 at clock=0)
+    assert g["action"]["type"] == "talk", f"Expected talk to 陈伯, got {g['action']['type']}"
+    assert g["action"]["target"] == "陈伯", f"Expected 陈伯, got {g['action']['target']}"
+    print("[PASS] test_guide_talk_chenbo_when_in_study")
+
+
+def test_guide_afu_needs_two_talks_before_investigate():
+    """测试：调查厨房需要阿福对话至少2次，guide 应先推荐盘问阿福"""
+    from game.web_api import _guide_talk_or_move, _build_guide
+    w = build_initial_world()
+    w.phase = "investigation"
+    w.player.inventory.extend(["新遗嘱草稿", "异常的茶杯残留", "借据"])
+
+    # At clock=0, 阿福 is at 厨房. Put player in 厨房 → talk is legal.
+    w.player.location = "厨房"
+    result = _guide_talk_or_move(
+        w, "阿福", "你昨晚看到了什么？",
+        "需要盘问阿福获取证词。阿福就在这里。",
+        "需要盘问阿福获取证词。",
+    )
+    assert result["action"]["type"] == "talk", f"Expected talk when same location, got {result['action']['type']}"
+    assert result["action"]["target"] == "阿福"
+
+    # When player is elsewhere (大厅), should return move to 厨房
+    w.player.location = "大厅"
+    result2 = _guide_talk_or_move(
+        w, "阿福", "你昨晚看到了什么？",
+        "需要盘问阿福。阿福就在这里。",
+        "需要盘问阿福获取证词。",
+    )
+    assert result2["action"]["type"] == "move", f"Expected move when NPC elsewhere, got {result2['action']['type']}"
+    assert result2["action"]["target"] == "厨房", f"Expected move to 厨房, got {result2['action']['target']}"
+
+    # Also verify _build_guide itself: clock=0 investigation, 1 evidence, at 大厅
+    # After 新遗嘱 check passes, goes to 茶杯残留 check. "陈伯" not in talked → move to 书房
+    w2 = build_initial_world()
+    w2.phase = "investigation"
+    w2.player.inventory.append("新遗嘱草稿")
+    w2.player.location = "大厅"
+    g = _build_guide(w2)
+    # Should recommend moving to 书房 to find 陈伯 there
+    assert g["action"]["type"] == "move", f"Expected move to 书房, got {g['action']['type']}"
+    assert g["action"]["target"] == "书房", f"Expected 书房, got {g['action']['target']}"
+    print("[PASS] test_guide_afu_needs_two_talks_before_investigate")
+
+
 def main():
     tests = [
         test_build_world,
@@ -355,6 +442,10 @@ def main():
         test_guide_returns_action_for_initial_state,
         test_guide_does_not_modify_world,
         test_guide_confrontation_returns_accuse_linwan,
+        test_guide_talk_requires_same_location,
+        test_guide_investigation_gets_will_by_study_investigate,
+        test_guide_talk_chenbo_when_in_study,
+        test_guide_afu_needs_two_talks_before_investigate,
     ]
 
     passed = 0

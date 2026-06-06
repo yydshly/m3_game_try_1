@@ -434,21 +434,38 @@ GUIDE_QUESTIONS: dict[str, str] = {
 }
 
 
-def _npc_location_at(npc_name: str, clock: int) -> str:
-    """Replicate rules.npc_location_at without importing rules (avoids circular)."""
-    locs_map = {
-        "陈伯": {0: "书房", 1: "书房", 2: "走廊", 3: "自己房间", 4: "厨房", 5: "厨房", 6: "大厅", 7: "大厅", 8: "大厅"},
-        "苏苏": {0: "餐厅", 1: "自己房间", 2: "自己房间", 3: "自己房间", 4: "走廊", 5: "厨房", 6: "大厅", 7: "大厅", 8: "大厅"},
-        "林婉": {0: "书房", 1: "走廊", 2: "自己房间", 3: "自己房间", 4: "走廊", 5: "大厅", 6: "大厅", 7: "大厅", 8: "大厅"},
-        "王总": {0: "餐厅", 1: "书房", 2: "书房", 3: "自己房间", 4: "走廊", 5: "大厅", 6: "大厅", 7: "大厅", 8: "大厅"},
-        "阿福": {0: "厨房", 1: "厨房", 2: "厨房", 3: "厨房", 4: "厨房", 5: "厨房", 6: "厨房", 7: "大厅", 8: "大厅"},
-        "小张": {0: "保安室", 1: "保安室", 2: "走廊", 3: "走廊", 4: "保安室", 5: "保安室", 6: "大厅", 7: "大厅", 8: "大厅"},
+def _guide_talk_or_move(
+    world: WorldState,
+    npc_name: str,
+    question: str,
+    reason_when_here: str,
+    reason_when_away: str,
+) -> dict[str, Any]:
+    """
+    Return a talk action if npc_name is at player's location, otherwise a move action.
+    All guide recommendations for talk must go through this helper to stay legal.
+    """
+    import game.rules as rules
+
+    npc_loc = rules.npc_location_at(npc_name, world.clock)
+    player_loc = world.player.location
+
+    if npc_loc == player_loc:
+        return {
+            "title": "建议下一步",
+            "reason": reason_when_here,
+            "action": {"type": "talk", "target": npc_name, "text": question},
+            "label": f"盘问 {npc_name}",
+            "confidence": "high",
+        }
+
+    return {
+        "title": "建议下一步",
+        "reason": f"{reason_when_away} {npc_name} 当前在 {npc_loc}，请先前往那里。",
+        "action": {"type": "move", "target": npc_loc, "text": None},
+        "label": f"前往 {npc_loc}",
+        "confidence": "high",
     }
-    locs = locs_map.get(npc_name, {})
-    for c in range(clock, -1, -1):
-        if c in locs:
-            return locs[c]
-    return "大厅"
 
 
 def _build_guide(world: WorldState) -> dict[str, Any]:
@@ -456,35 +473,30 @@ def _build_guide(world: WorldState) -> dict[str, Any]:
     Deterministic guide — does NOT call M3, does NOT modify world.
     Returns a guide dict with title, reason, action, label, confidence.
     """
-    from game.rules import (
-        DINNER_MIN_TALKS,
-        INVESTIGATION_MIN_EVIDENCE,
-        PHASE_CONFRONTATION,
-        PHASE_DINNER,
-        PHASE_ENDING,
-        PHASE_INVESTIGATION,
-    )
+    import game.rules as rules
 
     phase = world.phase
     clock = world.clock
     player_loc = world.player.location
     talked = set(world.player.revealed_to.keys())
     evidence_count = len(world.player.inventory)
+    afu_talks = len(world.player.revealed_to.get("阿福", []))
 
-    # Helper: find NPCs at a given location
+    # Helper: find alive NPCs at a given location using shared rules
     def npcs_at(loc: str):
-        return [n for n in world.npcs if _npc_location_at(n, clock) == loc and world.npcs[n].alive]
+        return [n for n in world.npcs if rules.npc_location_at(n, clock) == loc and world.npcs[n].alive]
 
     # Helper: find a location with un-talked NPCs
     def location_with_untalked_npcs():
-        for loc in ("大厅", "书房", "厨房", "餐厅", "保安室", "走廊", "陈伯房间", "林婉房间", "苏苏房间", "王总房间", "自己房间"):
+        for loc in ("大厅", "书房", "厨房", "餐厅", "保安室", "走廊",
+                    "陈伯房间", "林婉房间", "苏苏房间", "王总房间", "自己房间"):
             present = npcs_at(loc)
             if present and any(n not in talked for n in present):
                 return loc, present
         return None, []
 
     # ── Ending ────────────────────────────────────────
-    if phase == PHASE_ENDING:
+    if phase == rules.PHASE_ENDING:
         return {
             "title": "案件结束",
             "reason": "当前游戏已结束，可以重新开始。",
@@ -494,7 +506,7 @@ def _build_guide(world: WorldState) -> dict[str, Any]:
         }
 
     # ── Dinner phase ──────────────────────────────────
-    if phase == PHASE_DINNER:
+    if phase == rules.PHASE_DINNER:
         # Check NPCs at current location
         present = npcs_at(player_loc)
         untalked_present = [n for n in present if n not in talked]
@@ -502,16 +514,14 @@ def _build_guide(world: WorldState) -> dict[str, Any]:
         if untalked_present:
             target = untalked_present[0]
             question = GUIDE_QUESTIONS.get(target, "你知道什么线索？")
-            return {
-                "title": "建议下一步",
-                "reason": f"晚宴阶段需要先盘问 {DINNER_MIN_TALKS} 名人物。当前 {player_loc} 有 {target}，建议先盘问。",
-                "action": {"type": "talk", "target": target, "text": question},
-                "label": f"盘问 {target}",
-                "confidence": "high",
-            }
+            return _guide_talk_or_move(
+                world, target, question,
+                f"晚宴阶段需要先盘问 {rules.DINNER_MIN_TALKS} 名人物。当前 {player_loc} 有 {target}，建议先盘问。",
+                f"需要盘问 {target} 来推进晚宴阶段，但该NPC不在当前地点。",
+            )
 
         talked_count = len(talked)
-        if talked_count >= DINNER_MIN_TALKS:
+        if talked_count >= rules.DINNER_MIN_TALKS:
             return {
                 "title": "建议下一步",
                 "reason": f"已盘问 {talked_count} 名人物，满足进入调查阶段的条件。使用「推进时段」进入调查。",
@@ -540,8 +550,8 @@ def _build_guide(world: WorldState) -> dict[str, Any]:
         }
 
     # ── Investigation phase ────────────────────────────
-    if phase == PHASE_INVESTIGATION:
-        if evidence_count >= INVESTIGATION_MIN_EVIDENCE:
+    if phase == rules.PHASE_INVESTIGATION:
+        if evidence_count >= rules.INVESTIGATION_MIN_EVIDENCE:
             return {
                 "title": "建议下一步",
                 "reason": f"已收集 {evidence_count} 条证据，满足对峙条件。使用「推进时段」进入对峙阶段。",
@@ -550,58 +560,125 @@ def _build_guide(world: WorldState) -> dict[str, Any]:
                 "confidence": "high",
             }
 
-        # If player hasn't talked to key NPCs, suggest it
+        # 1. 新遗嘱草稿：书房固定物品，直接调查书房即可获得
         if "新遗嘱草稿" not in world.player.inventory:
-            if "陈伯" not in talked:
+            if player_loc != "书房":
                 return {
                     "title": "建议下一步",
-                    "reason": "书房里有新遗嘱草稿，但需要先盘问陈伯了解情况。",
-                    "action": {"type": "talk", "target": "陈伯", "text": GUIDE_QUESTIONS.get("陈伯", "你昨晚在哪？")},
-                    "label": "盘问陈伯",
+                    "reason": "书房里有新遗嘱草稿，是关键证据。建议直接前往书房调查。",
+                    "action": {"type": "move", "target": "书房", "text": None},
+                    "label": "前往书房",
                     "confidence": "high",
                 }
-            if "王总" not in talked:
-                return {
-                    "title": "建议下一步",
-                    "reason": "书房里的借据需要先和王总谈过话才能发现。",
-                    "action": {"type": "talk", "target": "王总", "text": GUIDE_QUESTIONS.get("王总", "你昨晚去了哪里？")},
-                    "label": "盘问王总",
-                    "confidence": "high",
-                }
-
-        # Investigate current location if possible
-        from game.rules import can_investigate
-        if can_investigate(player_loc):
             return {
                 "title": "建议下一步",
-                "reason": f"当前地点 {player_loc} 可以调查，可能发现新证据。",
+                "reason": "你现在在书房，可以调查获取新遗嘱草稿。",
                 "action": {"type": "investigate", "target": None, "text": None},
-                "label": f"调查 {player_loc}",
-                "confidence": "medium",
+                "label": "调查书房",
+                "confidence": "high",
             }
 
-        # Try to find a location with NPCs or evidence
-        loc_candidates = ["书房", "厨房", "林婉房间"]
-        for loc in loc_candidates:
-            if loc != player_loc:
+        # 2. 异常的茶杯残留：需先和陈伯说过话，再调查书房
+        if "异常的茶杯残留" not in world.player.inventory:
+            if "陈伯" not in talked:
+                return _guide_talk_or_move(
+                    world, "陈伯", GUIDE_QUESTIONS.get("陈伯", "你昨晚在哪？"),
+                    f"书房里的茶杯残留需要先和陈伯交谈才能发现。当前 {player_loc} 有陈伯，建议先盘问。",
+                    "需要先盘问陈伯来解锁茶杯残留线索。",
+                )
+            if player_loc != "书房":
                 return {
                     "title": "建议下一步",
-                    "reason": f"建议前往 {loc} 继续调查。",
-                    "action": {"type": "move", "target": loc, "text": None},
-                    "label": f"前往 {loc}",
-                    "confidence": "medium",
+                    "reason": "已和陈伯谈过，现在可以前往书房调查获取茶杯残留证据。",
+                    "action": {"type": "move", "target": "书房", "text": None},
+                    "label": "前往书房",
+                    "confidence": "high",
                 }
+            return {
+                "title": "建议下一步",
+                "reason": "你现在在书房，可以调查获取茶杯残留证据。",
+                "action": {"type": "investigate", "target": None, "text": None},
+                "label": "调查书房",
+                "confidence": "high",
+            }
 
+        # 3. 借据：需先和王总说过话，再调查书房
+        if "借据" not in world.player.inventory:
+            if "王总" not in talked:
+                return _guide_talk_or_move(
+                    world, "王总", GUIDE_QUESTIONS.get("王总", "你昨晚去了哪里？"),
+                    f"书房的借据需要先和王总交谈才能发现。当前 {player_loc} 有王总，建议先盘问。",
+                    "需要先盘问王总来解锁借据线索。",
+                )
+            if player_loc != "书房":
+                return {
+                    "title": "建议下一步",
+                    "reason": "已和王总谈过，现在可以前往书房调查获取借据。",
+                    "action": {"type": "move", "target": "书房", "text": None},
+                    "label": "前往书房",
+                    "confidence": "high",
+                }
+            return {
+                "title": "建议下一步",
+                "reason": "你现在在书房，可以调查获取借据。",
+                "action": {"type": "investigate", "target": None, "text": None},
+                "label": "调查书房",
+                "confidence": "high",
+            }
+
+        # 4. 厨师阿福的证词：需和阿福对话至少2次，再调查厨房
+        if "厨师阿福的证词" not in world.player.inventory:
+            if afu_talks < 2:
+                return _guide_talk_or_move(
+                    world, "阿福", GUIDE_QUESTIONS.get("阿福", "你昨晚看到了什么？"),
+                    f"厨房的证词需要盘问阿福至少2次才能获得（已 {afu_talks} 次）。当前 {player_loc} 有阿福，建议继续盘问。",
+                    "需要盘问阿福至少2次来解锁证词。",
+                )
+            if player_loc != "厨房":
+                return {
+                    "title": "建议下一步",
+                    "reason": "已盘问阿福多次，可以前往厨房调查获取证词。",
+                    "action": {"type": "move", "target": "厨房", "text": None},
+                    "label": "前往厨房",
+                    "confidence": "high",
+                }
+            return {
+                "title": "建议下一步",
+                "reason": "你现在在厨房，可以调查获取厨师阿福的证词。",
+                "action": {"type": "investigate", "target": None, "text": None},
+                "label": "调查厨房",
+                "confidence": "high",
+            }
+
+        # 5. 林婉的病历笔记：调查林婉房间
+        if "林婉的病历笔记" not in world.player.inventory:
+            if player_loc != "林婉房间":
+                return {
+                    "title": "建议下一步",
+                    "reason": "林婉房间有她的病历笔记，是重要证据。建议前往调查。",
+                    "action": {"type": "move", "target": "林婉房间", "text": None},
+                    "label": "前往林婉房间",
+                    "confidence": "high",
+                }
+            return {
+                "title": "建议下一步",
+                "reason": "你现在在林婉房间，可以调查获取病历笔记。",
+                "action": {"type": "investigate", "target": None, "text": None},
+                "label": "调查林婉房间",
+                "confidence": "high",
+            }
+
+        # All evidence found but somehow count is low — shouldn't normally happen
         return {
             "title": "建议下一步",
-            "reason": "继续调查各地点，收集证据以进入对峙阶段。",
-            "action": {"type": "investigate", "target": None, "text": None},
-            "label": "调查当前地点",
-            "confidence": "low",
+            "reason": "证据收集完成，可以使用「推进时段」进入对峙阶段。",
+            "action": {"type": "advance", "target": None, "text": None},
+            "label": "推进时段",
+            "confidence": "high",
         }
 
     # ── Confrontation phase ────────────────────────────
-    if phase == PHASE_CONFRONTATION:
+    if phase == rules.PHASE_CONFRONTATION:
         return {
             "title": "建议下一步",
             "reason": "对峙阶段：结合已有证据，选择你认为最可疑的人完成指认。林婉因医疗知情、遗嘱动机和案发机会最可疑。",
