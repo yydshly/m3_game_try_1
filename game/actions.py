@@ -25,6 +25,19 @@ LEGAL_ACTION_TYPES: tuple[str, ...] = (
 )
 
 
+def _investigate_empty_hint(world, loc: str) -> str:
+    """Return a location-specific hint when investigate finds nothing new."""
+    if loc == "大厅":
+        return "你仔细检查了大厅，没有发现新的物证。这里更像是通往各处的集散点，建议前往书房、厨房或有人的房间继续调查。"
+    if loc == "书房":
+        return "你重新检查了书房，目前没有新的发现。有些线索需要先盘问陈伯或王总后才会显现。"
+    if loc == "厨房":
+        return "你检查了厨房，暂时没有新的物证。若想获得厨师相关证词，需要多盘问阿福。"
+    if loc == "餐厅":
+        return "餐厅没有新的物证，但这里能帮助还原昨夜晚宴关系。建议盘问在场人物或前往书房。"
+    return f"你调查了{loc}，暂时没有新的发现。建议移动到有人的地点盘问，或查看右侧建议下一步。"
+
+
 @dataclass
 class PlayerAction:
     """前端发来的一个结构化动作。"""
@@ -220,7 +233,7 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
         if gained:
             events.append({"kind": "investigate", "speaker": "", "text": f"在 {loc} 获得了: {', '.join(gained)}"})
         else:
-            events.append({"kind": "investigate", "speaker": "", "text": "没有获得新物品。（提示:有些证据需要先和特定NPC说过话才能获得）"})
+            events.append({"kind": "investigate", "speaker": "", "text": _investigate_empty_hint(world, loc)})
         return ActionResult(ok=True, events=events)
 
     # ---- advance ----

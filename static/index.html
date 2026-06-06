@@ -1274,6 +1274,99 @@ header {
 #scene-flash.active { opacity: 1; pointer-events: all; }
 #scene-flash .flash-text { color: var(--gold); font-size: 15px; letter-spacing: 4px; opacity: 0; transition: opacity 0.3s 0.15s; }
 #scene-flash.active .flash-text { opacity: 1; }
+
+/* ── FOLLOWUP COMPOSER ────────────── */
+.followup-composer {
+  margin: 10px 0 14px 52px;
+  padding: 10px;
+  border: 1px solid rgba(201,162,39,0.18);
+  background: rgba(22,30,46,0.6);
+  border-radius: 8px;
+}
+.followup-title {
+  color: var(--gold);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.followup-row {
+  display: flex;
+  gap: 8px;
+}
+.followup-input {
+  flex: 1;
+  resize: vertical;
+  min-height: 42px;
+  background: rgba(8,12,20,0.72);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+}
+.followup-send,
+.followup-preset {
+  border: 1px solid rgba(201,162,39,0.35);
+  background: rgba(201,162,39,0.08);
+  color: var(--gold);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+.followup-send:hover,
+.followup-preset:hover {
+  background: rgba(201,162,39,0.16);
+}
+.followup-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.investigate-empty {
+  border-left-color: rgba(130,150,180,0.45);
+  color: var(--muted);
+}
+
+/* ── DETECTIVE GUIDE ──────────────── */
+.detective-guide {
+  margin: 0 18px 0 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(201,162,39,0.22);
+  background: rgba(201,162,39,0.06);
+  border-radius: 8px;
+}
+.guide-title {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+.guide-reason {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+#guide-action-btn {
+  border: 1px solid rgba(201,162,39,0.4);
+  background: rgba(201,162,39,0.1);
+  color: var(--gold);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+#guide-action-btn:hover:not(:disabled) {
+  background: rgba(201,162,39,0.2);
+}
+#guide-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 </style>
 </head>
 <body>
@@ -1362,6 +1455,11 @@ header {
   <div class="story-panel">
     <div class="objective-hint" id="objective-hint"></div>
     <div class="scene-context" id="scene-context"></div>
+    <div class="detective-guide" id="detective-guide">
+      <div class="guide-title">侦探助手</div>
+      <div class="guide-reason" id="guide-reason">正在分析下一步...</div>
+      <button id="guide-action-btn" style="display:none">执行建议</button>
+    </div>
     <div class="story-log" id="story-log"></div>
   </div>
 
@@ -1609,6 +1707,9 @@ let openingBriefingShown = false; // 防止案情简报重复插入
 let latestNpcs = [], latestLocation = null;
 let latestActions = []; // 缓存最新可用动作，用于 loading 状态恢复
 let activeTalkPendingEl = null; // 盘问等待状态元素
+let activeDialogueNpc = null; // 当前正在盘问的 NPC（用于连续追问）
+let activeFollowupEl = null; // 当前追问输入区 DOM 元素
+let latestGuide = null; // 最新侦探助手建议
 
 // ── HTML 转义 ──────────────────────────────────
 function escapeHtml(str) {
@@ -1658,6 +1759,117 @@ function clearTalkPending() {
     activeTalkPendingEl.parentNode.removeChild(activeTalkPendingEl);
   }
   activeTalkPendingEl = null;
+}
+
+// ── FOLLOWUP COMPOSER ─────────────────────────────────────
+function clearFollowupComposer() {
+  if (activeFollowupEl && activeFollowupEl.parentNode) {
+    activeFollowupEl.parentNode.removeChild(activeFollowupEl);
+  }
+  activeFollowupEl = null;
+  activeDialogueNpc = null;
+}
+
+function renderFollowupComposer(npcName) {
+  const logEl = document.getElementById('story-log');
+  if (!logEl || !npcName) return;
+
+  clearFollowupComposer();
+
+  const presets = PRESETS[npcName] || [];
+
+  const el = document.createElement('div');
+  el.className = 'followup-composer';
+  el.innerHTML = `
+    <div class="followup-title">继续追问 ${escapeHtml(npcName)}</div>
+    <div class="followup-row">
+      <textarea class="followup-input" rows="2" placeholder="继续追问，不用重新点击盘问..."></textarea>
+      <button class="followup-send">发送</button>
+    </div>
+    <div class="followup-presets">
+      ${presets.slice(0, 4).map(q => `<button class="followup-preset">${escapeHtml(q)}</button>`).join('')}
+    </div>
+  `;
+
+  const input = el.querySelector('.followup-input');
+  const send = el.querySelector('.followup-send');
+
+  function sendFollowup() {
+    const text = input.value.trim();
+    if (!text || actionLoading) return;
+    const npc = activeDialogueNpc || npcName;
+    clearFollowupComposer();
+    appendPlayerQuestion(npc, text);
+    appendTalkPending(npc);
+    executeAction('talk', npc, text);
+  }
+
+  send.onclick = sendFollowup;
+  input.onkeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendFollowup();
+    }
+  };
+
+  el.querySelectorAll('.followup-preset').forEach(btn => {
+    btn.onclick = () => {
+      input.value = btn.textContent;
+      input.focus();
+    };
+  });
+
+  logEl.appendChild(el);
+  activeFollowupEl = el;
+  scroll();
+}
+
+// ── DETECTIVE GUIDE ─────────────────────────────────────
+async function refreshGuide() {
+  if (!sessionId) return;
+  try {
+    const r = await fetch('/api/guide/' + sessionId);
+    if (!r.ok) return;
+    latestGuide = await r.json();
+    renderGuide(latestGuide);
+  } catch (e) {
+    console.warn('[Guide] failed', e);
+  }
+}
+
+function renderGuide(g) {
+  const el = document.getElementById('detective-guide');
+  if (!el || !g) return;
+
+  const reason = document.getElementById('guide-reason');
+  const btn = document.getElementById('guide-action-btn');
+
+  reason.textContent = g.reason || '暂无建议。';
+
+  if (g.action) {
+    btn.style.display = '';
+    btn.textContent = g.label || '执行建议';
+    btn.disabled = actionLoading;
+    btn.onclick = () => executeGuideAction(g.action);
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function executeGuideAction(action) {
+  if (!action || actionLoading) return;
+
+  if (action.type === 'talk') {
+    const target = action.target;
+    const text = action.text || '你知道什么线索？';
+    activeDialogueNpc = target;
+    appendPlayerQuestion(target, text);
+    appendTalkPending(target);
+    executeAction('talk', target, text);
+    return;
+  }
+
+  executeAction(action.type, action.target || null, action.text || null);
 }
 
 // ── 初始化 ─────────────────────────────────────
@@ -1749,18 +1961,24 @@ function streamNPCReply(data) {
   w.innerHTML = `<div class="bubble"><div class="speaker-name">${npc}</div></div>`;
   w.insertBefore(avatarEl, w.firstChild);
   document.getElementById('story-log').appendChild(w);
-  streamText(w.querySelector('.bubble'), data.text);
+  activeDialogueNpc = npc;
+  streamText(w.querySelector('.bubble'), data.text, () => {
+    renderFollowupComposer(npc);
+  });
   scroll();
 }
 
-function streamText(el, chunks) {
+function streamText(el, chunks, onDone) {
   let i = 0;
   const cur = document.createElement('span'); cur.className = 'typing-cursor'; el.appendChild(cur);
   function next() {
     if (i < chunks.length) {
       el.insertBefore(document.createTextNode(chunks[i]), cur); i++; scroll();
       setTimeout(next, 52 + Math.random() * 48);
-    } else { cur.remove(); }
+    } else {
+      cur.remove();
+      if (onDone) onDone();
+    }
   }
   next();
 }
@@ -2081,6 +2299,9 @@ function updateState(s) {
   // actions — normalize to array so empty/undefined is handled consistently
   const actions = Array.isArray(s.available_actions) ? s.available_actions : [];
   renderActions(actions);
+
+  // refresh detective guide
+  refreshGuide();
 }
 
 function renderEvidence(details) {
@@ -2408,13 +2629,17 @@ function renderActionEvents(events, actionType) {
 
     if (ev.kind === 'game_over') {
       clearTalkPending();
+      clearFollowupComposer();
       showGameOver(ev);
       rendered = true;
       continue;
     }
 
     if (ev.kind === 'investigate') {
-      log('entry-system narrative', ev.text || '调查完成。');
+      const cls = (ev.text || '').includes('没有') && (ev.text || '').includes('发现')
+        ? 'entry-system narrative investigate-empty'
+        : 'entry-system narrative';
+      log(cls, ev.text || '调查完成。');
       rendered = true;
       continue;
     }
@@ -2426,6 +2651,10 @@ function renderActionEvents(events, actionType) {
     }
 
     if (ev.kind === 'system') {
+      // Clear followup when player moves to a new location
+      if (actionType === 'move' || (ev.text || '').includes('移动到')) {
+        clearFollowupComposer();
+      }
       if (ev.text) log('entry-system', ev.text);
       rendered = true;
       continue;
@@ -2566,6 +2795,7 @@ document.getElementById('talk-send').onclick = () => {
   closeTalk(false);
 
   if (npcName) {
+    activeDialogueNpc = npcName;
     appendPlayerQuestion(npcName, text);
     appendTalkPending(npcName);
     executeAction('talk', npcName, text);

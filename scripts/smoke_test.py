@@ -290,6 +290,50 @@ def test_ending_key_structure():
     print("[PASS] test_ending_key_structure")
 
 
+def test_guide_returns_action_for_initial_state():
+    """测试：guide API 初始状态返回 move/talk/investigate/advance 之一，不返回 None"""
+    from game.web_api import _build_guide
+    w = build_initial_world()
+    guide = _build_guide(w)
+    assert guide is not None
+    assert "action" in guide
+    # action can be None only in ending phase
+    assert guide["action"] is not None, "Initial state guide should have an action"
+    assert guide["action"]["type"] in ("move", "talk", "investigate", "advance"), \
+        f"Unexpected action type: {guide['action']['type']}"
+    print("[PASS] test_guide_returns_action_for_initial_state")
+
+
+def test_guide_does_not_modify_world():
+    """测试：guide API 不修改 WorldState"""
+    from game.web_api import _build_guide
+    w = build_initial_world()
+    import copy
+    w_before = copy.deepcopy(w)
+    _build_guide(w)
+    w_after = w
+    assert w_after.phase == w_before.phase
+    assert w_after.clock == w_before.clock
+    assert w_after.player.location == w_before.player.location
+    assert w_after.player.inventory == w_before.player.inventory
+    assert w_after.player.revealed_to == w_before.player.revealed_to
+    print("[PASS] test_guide_does_not_modify_world")
+
+
+def test_guide_confrontation_returns_accuse_linwan():
+    """测试：confrontation 阶段 guide 返回 accuse 林婉"""
+    from game.web_api import _build_guide
+    w = build_initial_world()
+    _force_confrontation_phase(w)
+    guide = _build_guide(w)
+    assert guide is not None
+    assert guide["action"] is not None
+    assert guide["action"]["type"] == "accuse"
+    assert guide["action"]["target"] == "林婉", \
+        f"Expected accuse linwan, got {guide['action']['target']}"
+    print("[PASS] test_guide_confrontation_returns_accuse_linwan")
+
+
 def main():
     tests = [
         test_build_world,
@@ -308,6 +352,9 @@ def main():
         test_ending_key_correct_accusation,
         test_ending_key_wrong_accusation,
         test_ending_key_structure,
+        test_guide_returns_action_for_initial_state,
+        test_guide_does_not_modify_world,
+        test_guide_confrontation_returns_accuse_linwan,
     ]
 
     passed = 0

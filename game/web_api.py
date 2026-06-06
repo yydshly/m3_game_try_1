@@ -420,6 +420,215 @@ def _stream_text(text: str) -> list[str]:
 
 
 # ============================================================
+# 侦探助手引导 API
+# ============================================================
+
+# 推荐问题映射（不使用大模型）
+GUIDE_QUESTIONS: dict[str, str] = {
+    "陈伯": "你昨晚在哪？",
+    "林婉": "你和周老爷是什么关系？",
+    "王总": "你昨晚去了哪里？",
+    "苏苏": "昨晚你听到了什么？",
+    "阿福": "你昨晚看到了什么？",
+    "小张": "你昨晚巡逻了吗？",
+}
+
+
+def _npc_location_at(npc_name: str, clock: int) -> str:
+    """Replicate rules.npc_location_at without importing rules (avoids circular)."""
+    locs_map = {
+        "陈伯": {0: "书房", 1: "书房", 2: "走廊", 3: "自己房间", 4: "厨房", 5: "厨房", 6: "大厅", 7: "大厅", 8: "大厅"},
+        "苏苏": {0: "餐厅", 1: "自己房间", 2: "自己房间", 3: "自己房间", 4: "走廊", 5: "厨房", 6: "大厅", 7: "大厅", 8: "大厅"},
+        "林婉": {0: "书房", 1: "走廊", 2: "自己房间", 3: "自己房间", 4: "走廊", 5: "大厅", 6: "大厅", 7: "大厅", 8: "大厅"},
+        "王总": {0: "餐厅", 1: "书房", 2: "书房", 3: "自己房间", 4: "走廊", 5: "大厅", 6: "大厅", 7: "大厅", 8: "大厅"},
+        "阿福": {0: "厨房", 1: "厨房", 2: "厨房", 3: "厨房", 4: "厨房", 5: "厨房", 6: "厨房", 7: "大厅", 8: "大厅"},
+        "小张": {0: "保安室", 1: "保安室", 2: "走廊", 3: "走廊", 4: "保安室", 5: "保安室", 6: "大厅", 7: "大厅", 8: "大厅"},
+    }
+    locs = locs_map.get(npc_name, {})
+    for c in range(clock, -1, -1):
+        if c in locs:
+            return locs[c]
+    return "大厅"
+
+
+def _build_guide(world: WorldState) -> dict[str, Any]:
+    """
+    Deterministic guide — does NOT call M3, does NOT modify world.
+    Returns a guide dict with title, reason, action, label, confidence.
+    """
+    from game.rules import (
+        DINNER_MIN_TALKS,
+        INVESTIGATION_MIN_EVIDENCE,
+        PHASE_CONFRONTATION,
+        PHASE_DINNER,
+        PHASE_ENDING,
+        PHASE_INVESTIGATION,
+    )
+
+    phase = world.phase
+    clock = world.clock
+    player_loc = world.player.location
+    talked = set(world.player.revealed_to.keys())
+    evidence_count = len(world.player.inventory)
+
+    # Helper: find NPCs at a given location
+    def npcs_at(loc: str):
+        return [n for n in world.npcs if _npc_location_at(n, clock) == loc and world.npcs[n].alive]
+
+    # Helper: find a location with un-talked NPCs
+    def location_with_untalked_npcs():
+        for loc in ("大厅", "书房", "厨房", "餐厅", "保安室", "走廊", "陈伯房间", "林婉房间", "苏苏房间", "王总房间", "自己房间"):
+            present = npcs_at(loc)
+            if present and any(n not in talked for n in present):
+                return loc, present
+        return None, []
+
+    # ── Ending ────────────────────────────────────────
+    if phase == PHASE_ENDING:
+        return {
+            "title": "案件结束",
+            "reason": "当前游戏已结束，可以重新开始。",
+            "action": None,
+            "label": "",
+            "confidence": "high",
+        }
+
+    # ── Dinner phase ──────────────────────────────────
+    if phase == PHASE_DINNER:
+        # Check NPCs at current location
+        present = npcs_at(player_loc)
+        untalked_present = [n for n in present if n not in talked]
+
+        if untalked_present:
+            target = untalked_present[0]
+            question = GUIDE_QUESTIONS.get(target, "你知道什么线索？")
+            return {
+                "title": "建议下一步",
+                "reason": f"晚宴阶段需要先盘问 {DINNER_MIN_TALKS} 名人物。当前 {player_loc} 有 {target}，建议先盘问。",
+                "action": {"type": "talk", "target": target, "text": question},
+                "label": f"盘问 {target}",
+                "confidence": "high",
+            }
+
+        talked_count = len(talked)
+        if talked_count >= DINNER_MIN_TALKS:
+            return {
+                "title": "建议下一步",
+                "reason": f"已盘问 {talked_count} 名人物，满足进入调查阶段的条件。使用「推进时段」进入调查。",
+                "action": {"type": "advance", "target": None, "text": None},
+                "label": "推进时段",
+                "confidence": "high",
+            }
+
+        # Try to find another location with un-talked NPCs
+        loc, _ = location_with_untalked_npcs()
+        if loc:
+            return {
+                "title": "建议下一步",
+                "reason": f"当前 {player_loc} 没有可盘问的对象。建议前往 {loc}，那里有未盘问的嫌疑人。",
+                "action": {"type": "move", "target": loc, "text": None},
+                "label": f"前往 {loc}",
+                "confidence": "medium",
+            }
+
+        return {
+            "title": "建议下一步",
+            "reason": "晚宴阶段需要先盘问 5 名人物，建议移动到有人的房间继续。",
+            "action": {"type": "move", "target": "大厅", "text": None},
+            "label": "前往大厅",
+            "confidence": "low",
+        }
+
+    # ── Investigation phase ────────────────────────────
+    if phase == PHASE_INVESTIGATION:
+        if evidence_count >= INVESTIGATION_MIN_EVIDENCE:
+            return {
+                "title": "建议下一步",
+                "reason": f"已收集 {evidence_count} 条证据，满足对峙条件。使用「推进时段」进入对峙阶段。",
+                "action": {"type": "advance", "target": None, "text": None},
+                "label": "推进时段",
+                "confidence": "high",
+            }
+
+        # If player hasn't talked to key NPCs, suggest it
+        if "新遗嘱草稿" not in world.player.inventory:
+            if "陈伯" not in talked:
+                return {
+                    "title": "建议下一步",
+                    "reason": "书房里有新遗嘱草稿，但需要先盘问陈伯了解情况。",
+                    "action": {"type": "talk", "target": "陈伯", "text": GUIDE_QUESTIONS.get("陈伯", "你昨晚在哪？")},
+                    "label": "盘问陈伯",
+                    "confidence": "high",
+                }
+            if "王总" not in talked:
+                return {
+                    "title": "建议下一步",
+                    "reason": "书房里的借据需要先和王总谈过话才能发现。",
+                    "action": {"type": "talk", "target": "王总", "text": GUIDE_QUESTIONS.get("王总", "你昨晚去了哪里？")},
+                    "label": "盘问王总",
+                    "confidence": "high",
+                }
+
+        # Investigate current location if possible
+        from game.rules import can_investigate
+        if can_investigate(player_loc):
+            return {
+                "title": "建议下一步",
+                "reason": f"当前地点 {player_loc} 可以调查，可能发现新证据。",
+                "action": {"type": "investigate", "target": None, "text": None},
+                "label": f"调查 {player_loc}",
+                "confidence": "medium",
+            }
+
+        # Try to find a location with NPCs or evidence
+        loc_candidates = ["书房", "厨房", "林婉房间"]
+        for loc in loc_candidates:
+            if loc != player_loc:
+                return {
+                    "title": "建议下一步",
+                    "reason": f"建议前往 {loc} 继续调查。",
+                    "action": {"type": "move", "target": loc, "text": None},
+                    "label": f"前往 {loc}",
+                    "confidence": "medium",
+                }
+
+        return {
+            "title": "建议下一步",
+            "reason": "继续调查各地点，收集证据以进入对峙阶段。",
+            "action": {"type": "investigate", "target": None, "text": None},
+            "label": "调查当前地点",
+            "confidence": "low",
+        }
+
+    # ── Confrontation phase ────────────────────────────
+    if phase == PHASE_CONFRONTATION:
+        return {
+            "title": "建议下一步",
+            "reason": "对峙阶段：结合已有证据，选择你认为最可疑的人完成指认。林婉因医疗知情、遗嘱动机和案发机会最可疑。",
+            "action": {"type": "accuse", "target": "林婉", "text": None},
+            "label": "指认林婉",
+            "confidence": "high",
+        }
+
+    # Fallback
+    return {
+        "title": "建议下一步",
+        "reason": "继续当前阶段，推进调查。",
+        "action": None,
+        "label": "",
+        "confidence": "low",
+    }
+
+
+@app.get("/api/guide/{session_id}")
+async def get_guide(session_id: str):
+    """返回当前状态的侦探引导建议（确定性规则，不调用大模型）。"""
+    session = get_session(session_id)
+    guide = _build_guide(session.world)
+    return guide
+
+
+# ============================================================
 # SSE 流
 # ============================================================
 
