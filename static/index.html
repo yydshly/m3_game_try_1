@@ -79,6 +79,16 @@ header {
 .hm-label { font-size: 10px; letter-spacing: 1px; }
 .hm-value { color: var(--text); font-weight: 500; }
 
+/* Evidence count in header — clickable to jump to evidence section */
+#h-evcount { cursor: pointer; color: var(--gold); transition: color 0.15s; }
+#h-evcount:hover { color: var(--gold-dim); }
+
+/* Pulse highlight when evidence section is scrolled-to */
+#evidence-section.pulse-focus {
+  box-shadow: inset 0 0 0 1px rgba(201,162,39,0.5);
+  background: rgba(201,162,39,0.04);
+}
+
 .phase-badge {
   background: var(--surface2);
   border: 1px solid var(--border2);
@@ -921,11 +931,21 @@ header {
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar-section { border-bottom: 1px solid var(--border); display: flex; flex-direction: column; }
-.sidebar-section.flexible { flex: 1; overflow: hidden; }
+.sidebar-section.flexible { flex: 1; min-height: 0; overflow: hidden; }
+
+/* Scrollable action panel — prevents buttons from pushing evidence below fold */
+#side-actions-section {
+  min-height: 0;
+}
+#side-action-groups {
+  max-height: 300px;
+  overflow-y: auto;
+}
 
 .sidebar-title {
   padding: 7px 13px;
@@ -1268,13 +1288,6 @@ header {
       </div>
     </div>
 
-    <div class="sidebar-section" id="side-actions-section">
-      <div class="sidebar-title">行动面板</div>
-      <div class="sidebar-body" id="side-action-groups">
-        <div class="ev-empty-small">加载中…</div>
-      </div>
-    </div>
-
     <div class="sidebar-section" id="case-progress-section">
       <div class="sidebar-title">案件进展</div>
       <div class="sidebar-body">
@@ -1282,10 +1295,17 @@ header {
       </div>
     </div>
 
-    <div class="sidebar-section">
+    <div class="sidebar-section" id="evidence-section">
       <div class="sidebar-title">持有证据</div>
       <div class="sidebar-body" id="ev-container">
         <div class="ev-empty">尚未获得证据。<br>移动到关键地点或盘问相关人物，可能发现新的线索。</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" id="side-actions-section">
+      <div class="sidebar-title">行动面板</div>
+      <div class="sidebar-body" id="side-action-groups">
+        <div class="ev-empty-small">加载中…</div>
       </div>
     </div>
 
@@ -1523,6 +1543,19 @@ async function initGame() {
     document.getElementById('connDot').classList.add('live');
   } catch(e) { log('entry-system', '连接服务器失败: ' + e.message); }
 }
+
+// Clickable evidence count — scroll to evidence section in right sidebar
+function scrollToEvidence() {
+  const section = document.getElementById('evidence-section');
+  if (!section) return;
+  // Scroll the sidebar to bring evidence section into view
+  section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  section.classList.add('pulse-focus');
+  setTimeout(() => section.classList.remove('pulse-focus'), 900);
+}
+
+// Bind evidence count click after DOM is ready
+document.getElementById('h-evcount')?.addEventListener('click', scrollToEvidence);
 
 // ── SSE ─────────────────────────────────────────
 function connectSSE(sid) {
