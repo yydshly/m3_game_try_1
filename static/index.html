@@ -2403,8 +2403,17 @@ async function executeAction(type, target, text) {
       if (type === 'talk') clearTalkPending();
       log('entry-system', d.error || '操作失败。');
     } else if (d.state) {
-      // Append narrative feedback for non-talk actions (talk gets SSE npc_reply)
-      if (type !== 'talk' && d.state) appendActionNarrative(type, target, d.state);
+      // For talk: render NPC reply from d.events immediately (SSE may not fire in this flow)
+      if (type === 'talk' && Array.isArray(d.events)) {
+        const npcEvent = d.events.find(e => e.kind === 'npc');
+        if (npcEvent) {
+          // Map backend event {speaker, text} to streamNPCReply format {npc, text}
+          clearTalkPending();
+          streamNPCReply({ npc: npcEvent.speaker, text: npcEvent.text });
+        }
+      }
+      // Append narrative feedback for non-talk actions
+      if (type !== 'talk') appendActionNarrative(type, target, d.state);
       updateState(d.state);
     }
   } catch(e) {
