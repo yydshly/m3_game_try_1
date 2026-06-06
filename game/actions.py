@@ -99,7 +99,7 @@ def available_actions(world) -> list[AvailableAction]:
     - talk: 与玩家同地点的、alive 的 NPC，每人一个
     - move: 所有合法地点（排除当前所在地）
     - investigate: 当前地点 can_investigate() 为真
-    - advance: 总是可用
+    - advance: 按当前阶段条件动态启用；未满足条件时 enabled=False + hint
     - accuse: 仅 phase == confrontation 时，对每个存活 NPC 一个；其余阶段 enabled=False + hint
     """
     from game.rules import can_investigate, npc_location_at
