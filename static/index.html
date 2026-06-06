@@ -760,6 +760,29 @@ header {
   opacity: 0.85;
 }
 
+/* Opening case briefing */
+.entry-briefing {
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(201,162,39,0.22);
+  background: rgba(201,162,39,0.06);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.briefing-title {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.briefing-line {
+  color: var(--muted);
+  margin-top: 3px;
+}
+.briefing-line b { color: var(--gold); font-weight: 600; }
+
 .entry-investigate {
   background: rgba(93,164,196,0.07);
   border: 1px solid rgba(93,164,196,0.2);
@@ -1376,6 +1399,7 @@ const EVIDENCE_DEFAULT_HINT = '这条线索可能与动机、手法或时间线�
 
 // ── 状态 ───────────────────────────────────────
 let sessionId = null, es = null, gameEnded = false, currentNpc = null, actionLoading = false;
+let openingBriefingShown = false; // 防止案情简报重复插入
 let latestNpcs = [], latestLocation = null;
 let latestActions = []; // 缓存最新可用动作，用于 loading 状态恢复
 
@@ -1394,6 +1418,7 @@ async function startGame() {
 }
 
 async function initGame() {
+  openingBriefingShown = false; // 重置：每次新游戏都显示案情简报
   try {
     // Load asset manifest before connecting to game
     await loadAssetManifest();
@@ -1401,6 +1426,7 @@ async function initGame() {
     const d = await r.json();
     sessionId = d.session_id;
     updateState(d.state);
+    renderOpeningBriefing(d.state); // 插入开局案情简报
     connectSSE(sessionId);
     document.getElementById('connDot').classList.add('live');
   } catch(e) { log('entry-system', '连接服务器失败: ' + e.message); }
@@ -1562,6 +1588,29 @@ function restartGame() {
 }
 
 // ── 状态同步 ────────────────────────────────────
+function renderOpeningBriefing(s) {
+  if (openingBriefingShown) return;
+  openingBriefingShown = true;
+  const logEl = document.getElementById('story-log');
+  if (!logEl || !s) return;
+
+  const locName = s.player_location || s.current_location?.name || '当前位置';
+  const present = (s.npcs || []).filter(n => n.present && n.alive !== false);
+  const presentText = present.length
+    ? '当前在场人物：' + present.map(n => n.name).join('、') + '。'
+    : '当前地点暂无在场人物，建议先调查环境或移动到其他地点。';
+
+  const div = document.createElement('div');
+  div.className = 'entry-briefing';
+  div.innerHTML =
+    '<div class="briefing-title">案情简报</div>' +
+    '<div class="briefing-line">你是被请来的私人侦探。暴风雨封锁孤岛，岛主<b>周慎之</b>被发现死在书房。</div>' +
+    '<div class="briefing-line">你现在位于：<b>' + locName + '</b>。' + presentText + '</div>' +
+    '<div class="briefing-line">观察现场、调查证据、盘问嫌疑人，在天亮前找出真凶。</div>';
+  logEl.appendChild(div);
+  scroll();
+}
+
 function renderObjectiveHint(s) {
   const el = document.getElementById('objective-hint');
   if (!el) return;
@@ -1572,7 +1621,12 @@ function renderObjectiveHint(s) {
 
   let hint = '';
   if (phase === 'dinner') {
-    hint = '当前目标：与在场人物对话，熟悉各方关系';
+    const present = (s.npcs || []).filter(n => n.present && n.alive !== false);
+    if (present.length) {
+      hint = '当前目标：与在场人物对话，熟悉各方关系';
+    } else {
+      hint = '当前目标：先调查环境或移动到有人的房间';
+    }
   } else if (phase === 'investigation') {
     if (evCount === 0) {
       hint = '当前目标：调查现场，寻找关键证据';
@@ -1905,10 +1959,10 @@ function renderNextStepHint(actions) {
   const inv = actions.filter(a => a.type === 'investigate' && a.enabled);
   const adv = actions.filter(a => a.type === 'advance' && a.enabled);
   const acc = actions.filter(a => a.type === 'accuse' && a.enabled);
-  if (talk.length) return '建议先' + talk[0].label + '，收集人物关系信息。';
-  if (inv.length) return '建议先' + inv[0].label + '，寻找关键证据。';
-  if (adv.length) return '当前可' + adv[0].label + '，推进到下一阶段。';
-  if (acc.length) return '证据已足够，选择嫌疑人完成指认。';
+  if (talk.length) return '这里有人在场。建议先' + talk[0].label + '，从人物关系入手。';
+  if (inv.length) return '当前地点可以调查。建议先' + inv[0].label + '，确认现场是否有线索。';
+  if (adv.length) return '当前阶段信息已基本收集，可以' + adv[0].label + '。';
+  if (acc.length) return '证据已足够，建议选择你认为最可疑的人完成指认。';
   return '暂无推荐动作，请查看当前目标或移动到其他地点。';
 }
 
