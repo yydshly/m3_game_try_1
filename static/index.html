@@ -730,6 +730,71 @@ header {
   display: none;
 }
 
+/* Scene context — fixed narrative area at top of center panel */
+.scene-context {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  background: rgba(8,12,20,0.6);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.scene-context-title {
+  color: var(--gold);
+  font-size: 11.5px;
+  letter-spacing: 1.5px;
+  margin-bottom: 2px;
+}
+.scene-context-desc {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.65;
+  font-style: italic;
+}
+.scene-context-people {
+  font-size: 11px;
+  color: var(--text);
+}
+.scene-context-guide {
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 2px;
+}
+
+/* Opening briefing */
+.entry-briefing {
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(201,162,39,0.22);
+  background: rgba(201,162,39,0.06);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.briefing-title {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.briefing-line {
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+/* Action-triggered narrative entries */
+.entry-system.narrative {
+  margin: 6px 0;
+  padding: 7px 10px;
+  border-left: 2px solid rgba(201,162,39,0.4);
+  background: rgba(201,162,39,0.04);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
 .story-log {
   flex: 1;
   overflow-y: auto;
@@ -1188,6 +1253,7 @@ header {
   <!-- CENTER: STORY LOG -->
   <div class="story-panel">
     <div class="objective-hint" id="objective-hint"></div>
+    <div class="scene-context" id="scene-context"></div>
     <div class="story-log" id="story-log"></div>
   </div>
 
@@ -1396,6 +1462,32 @@ const EVIDENCE_REASON_HINTS = {
 
 // 默认推理提示（无映射时使用）
 const EVIDENCE_DEFAULT_HINT = '这条线索可能与动机、手法或时间线有关。';
+
+// ── 场景叙事映射（前端持有，不改后端）───────────
+const LOCATION_NARRATIVES = {
+  '大厅': '吊灯昏黄，暴雨拍打着窗户。这里是众人聚集之处，但此刻显得异常空旷压抑。',
+  '书房': '书桌、茶杯与散乱的文件让这里格外压抑。茶杯里残留的液体是关键线索。',
+  '厨房': '炉火已熄，空气里残留着气味。这里可能藏着饮食和药物相关的线索。',
+  '餐厅': '长桌上的餐具还未完全收拾。昨夜晚宴的座次与对话能还原案发前的人际关系。',
+  '保安室': '监控屏幕和巡逻记录摆在桌上。这里能解释昨夜谁曾经过走廊。',
+  '走廊': '走廊连接各房间，是很多人行动时无法绕开的路径。',
+  '陈伯房间': '老管家的房间整洁克制，或许能看出他对周家的真实态度。',
+  '林婉房间': '私人医生的房间可能藏着药物、病历或她与死者关系的线索。',
+  '苏苏房间': '年轻侄女的房间或许能看出她对遗产和家族关系的真实想法。',
+  '王总房间': '商业伙伴的房间可能留下债务、合同或利益纠葛的痕迹。',
+  '阿福房间': '厨师的房间可能留下食源性证据或案发前后的行动痕迹。',
+  '小张房间': '保安的房间可能有关于巡逻与监控异常的更多信息。',
+  '自己房间': '临时落脚的房间，可以暂时整理目前掌握的线索。'
+};
+
+function buildLocationNarrative(locName, mood, present) {
+  const base = LOCATION_NARRATIVES[locName] || '你停在当前地点，观察周围是否有异常。';
+  const moodText = mood ? '这里给人的感觉是：' + mood + '。' : '';
+  const peopleText = present.length
+    ? '你注意到' + present.map(n => n.name).join('、') + '正在这里。'
+    : '这里暂时没有人在场。';
+  return base + ' ' + moodText + peopleText;
+}
 
 // ── 状态 ───────────────────────────────────────
 let sessionId = null, es = null, gameEnded = false, currentNpc = null, actionLoading = false;
@@ -1691,6 +1783,56 @@ function renderCaseProgress(s) {
     '<div class="case-hint">' + hint + '</div>';
 }
 
+function renderSceneContext(s) {
+  const el = document.getElementById('scene-context');
+  if (!el || !s) return;
+  const loc = s.current_location || {};
+  const locName = s.player_location || loc.name || '当前位置';
+  const mood = loc.mood || '';
+  const present = (s.npcs || []).filter(n => n.present && n.alive !== false);
+  const presentText = present.length ? present.map(n => n.name).join('、') : '暂无在场人物';
+
+  let guide = '';
+  if (present.length) {
+    guide = '这里有人在场。建议先盘问人物，了解他们与死者的关系。';
+  } else {
+    guide = '当前地点无人。建议先调查环境，或移动到有人的房间。';
+  }
+
+  const desc = buildLocationNarrative(locName, mood, present);
+  el.innerHTML =
+    '<div class="scene-context-title">当前场景：' + locName + '</div>' +
+    '<div class="scene-context-desc">' + desc + '</div>' +
+    '<div class="scene-context-people">在场人物：' + presentText + '</div>' +
+    '<div class="scene-context-guide">' + guide + '</div>';
+}
+
+function appendSystemNarrative(text) {
+  const logEl = document.getElementById('story-log');
+  if (!logEl || !text) return;
+  const div = document.createElement('div');
+  div.className = 'entry-system narrative';
+  div.textContent = text;
+  logEl.appendChild(div);
+  scroll();
+}
+
+function appendActionNarrative(type, target, state) {
+  if (type === 'move') {
+    const desc = buildLocationNarrative(target, state.current_location?.mood || '', state.npcs || []);
+    appendSystemNarrative('你来到' + target + '。' + desc);
+  } else if (type === 'investigate') {
+    const evCount = (state.inventory || []).length;
+    const loc = state.player_location || state.current_location?.name || '当前地点';
+    appendSystemNarrative('你调查了' + loc + '。目前已掌握 ' + evCount + ' 条证据，请查看右侧"持有证据"。');
+  } else if (type === 'advance') {
+    const phaseName = PHASE_NAME[state.phase] || state.phase || '—';
+    appendSystemNarrative('时间继续推进。当前阶段：' + phaseName + '。');
+  } else if (type === 'accuse') {
+    appendSystemNarrative('你在对峙中指认了：' + target + '。');
+  }
+}
+
 function updateState(s) {
   if (!s) return;
 
@@ -1711,6 +1853,9 @@ function updateState(s) {
 
   // objective hint
   renderObjectiveHint(s);
+
+  // scene context narrative
+  renderSceneContext(s);
 
   // case progress guide
   renderCaseProgress(s);
@@ -2065,7 +2210,11 @@ async function executeAction(type, target, text) {
     }, timeoutMs);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    if (d.state) updateState(d.state);
+    if (d.state) {
+      // Append narrative feedback for non-talk actions (talk gets SSE npc_reply)
+      if (type !== 'talk' && d.state) appendActionNarrative(type, target, d.state);
+      updateState(d.state);
+    }
   } catch(e) {
     const msg = e.name === 'AbortError' ? '请求超时，请稍后重试。' : ('操作失败: ' + e.message);
     log('entry-system', msg);
