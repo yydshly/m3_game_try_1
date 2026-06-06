@@ -147,6 +147,66 @@ def test_advance_after_talk_conditions():
     print("[PASS] test_advance_after_talk_conditions")
 
 
+def test_npc_dialogue_prompt_includes_visible_case_context():
+    """测试：NPC 对话 prompt 包含玩家已知证据和问题命中信息，不调用真实 M3"""
+    from game.scenario_data import build_initial_world
+    from game.actions import PlayerAction, dispatch
+    from game.agents import NPCDialogueAgent
+    import game.agents as agents
+
+    w = build_initial_world()
+
+    # 玩家前往书房并调查，获得"新遗嘱草稿"
+    r = dispatch(w, PlayerAction(type="move", target="书房"))
+    assert r.ok, f"move failed: {r.error}"
+
+    r = dispatch(w, PlayerAction(type="investigate"))
+    assert r.ok, f"investigate failed: {r.error}"
+    assert "新遗嘱草稿" in w.player.inventory
+
+    captured = {}
+    original_call_m3 = agents.call_m3
+
+    def fake_call_m3(*, system, user, purpose, temperature, max_tokens, thinking_enabled):
+        captured["system"] = system
+        captured["user"] = user
+        captured["purpose"] = purpose
+        captured["temperature"] = temperature
+        captured["max_tokens"] = max_tokens
+        captured["thinking_enabled"] = thinking_enabled
+        return "我知道这份新遗嘱草稿，但有些事我还不能乱说。"
+
+    try:
+        agents.call_m3 = fake_call_m3
+        reply = NPCDialogueAgent.respond(
+            npc=w.npcs["陈伯"],
+            world=w,
+            player_message="新遗嘱草稿是怎么回事？",
+        )
+    finally:
+        agents.call_m3 = original_call_m3
+
+    assert reply
+    prompt = captured.get("user", "")
+
+    # visible_case_context block present
+    assert "当前可见案件上下文" in prompt
+    # evidence details present
+    assert "新遗嘱草稿" in prompt
+    assert "来源:书房" in prompt
+    assert "指向:动机" in prompt
+    # question hit annotation present — use a message containing the exact evidence name
+    assert "玩家正在追问已持有证据: 新遗嘱草稿" in prompt, \
+        "hint: evidence hit fires when full name appears in player_message"
+    # location and phase present
+    assert "玩家当前位置: 书房" in prompt
+    assert "你的当前位置: 书房" in prompt
+    # correct purpose tag
+    assert captured.get("purpose") == "npc_dialogue:陈伯"
+
+    print("[PASS] test_npc_dialogue_prompt_includes_visible_case_context")
+
+
 def test_valid_locations_match_rules():
     """测试：actions.py 的 VALID_LOCATIONS 和 rules.py 一致"""
     from game.rules import _NPC_LOCATIONS
@@ -242,6 +302,7 @@ def main():
         test_status_action,
         test_advance_blocked_without_conditions,
         test_advance_after_talk_conditions,
+        test_npc_dialogue_prompt_includes_visible_case_context,
         test_valid_locations_match_rules,
         test_save_load_flow,
         test_ending_key_correct_accusation,
