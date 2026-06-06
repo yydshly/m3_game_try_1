@@ -57,6 +57,33 @@ class AvailableAction:
 # 可用动作生成
 # ============================================================
 
+def _build_advance_action(world):
+    """返回 (label, enabled, hint) 三元组，按当前阶段和完成度生成。"""
+    import game.rules as rules
+    from game.state import PHASE_DINNER, PHASE_INVESTIGATION, PHASE_CONFRONTATION
+
+    pending = rules.check_phase_transition(world)
+
+    if world.phase == PHASE_DINNER:
+        if pending:
+            return ("进入调查阶段", True, "已完成足够盘问，可以进入正式调查")
+        talks = rules.count_player_talks(world)
+        remain = max(0, rules.DINNER_MIN_TALKS - talks)
+        return ("进入调查阶段", False, f"还需盘问 {remain} 名人物才能进入调查")
+
+    if world.phase == PHASE_INVESTIGATION:
+        if pending:
+            return ("进入对峙阶段", True, "证据已足够，可以进入对峙")
+        ev_count = rules.count_player_evidence(world)
+        remain = max(0, rules.INVESTIGATION_MIN_EVIDENCE - ev_count)
+        return ("进入对峙阶段", False, f"还需获得 {remain} 条证据才能进入对峙")
+
+    if world.phase == PHASE_CONFRONTATION:
+        return ("等待渡船", False, "当前应先指认嫌疑人")
+
+    return ("推进时段", False, "当前无法推进")
+
+
 # 合法地点表（与 main.py 的 VALID_LOCATIONS 统一）
 VALID_LOCATIONS: list[str] = [
     "书房", "厨房", "大厅", "保安室",
@@ -98,8 +125,11 @@ def available_actions(world) -> list[AvailableAction]:
         actions.append(AvailableAction(
             type="investigate", label=f"调查 {here}"))
 
-    # 4. 推进时段
-    actions.append(AvailableAction(type="advance", label="推进时段"))
+    # 4. 推进时段（按阶段条件动态生成 enabled/hint）
+    advance_label, advance_enabled, advance_hint = _build_advance_action(world)
+    actions.append(AvailableAction(
+        type="advance", label=advance_label, enabled=advance_enabled, hint=advance_hint
+    ))
 
     # 5. 指认（仅对峙阶段可用）
     in_confront = world.phase == PHASE_CONFRONTATION
@@ -195,6 +225,19 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
 
     # ---- advance ----
     if action.type == ACTION_ADVANCE:
+        pending = rules.check_phase_transition(world)
+        if not pending:
+            # 条件未满足，不推进 clock，也不推进 phase
+            if world.phase == rules.PHASE_DINNER:
+                talks = rules.count_player_talks(world)
+                remain = max(0, rules.DINNER_MIN_TALKS - talks)
+                return ActionResult(ok=False, error=f"还不能进入调查阶段，还需盘问 {remain} 名人物。")
+            if world.phase == rules.PHASE_INVESTIGATION:
+                ev_count = rules.count_player_evidence(world)
+                remain = max(0, rules.INVESTIGATION_MIN_EVIDENCE - ev_count)
+                return ActionResult(ok=False, error=f"还不能进入对峙阶段，还需获得 {remain} 条证据。")
+            return ActionResult(ok=False, error="当前无法推进时段。")
+
         old_clock = world.clock
         new_clock = rules.advance_clock(world)
         rules.advance_phase(world)
@@ -221,9 +264,9 @@ def dispatch(world, action: PlayerAction) -> ActionResult:
                     events.append({"kind": "system", "speaker": "", "text": f"【林婉的决策】{act}（原因: {reason}）"})
 
         # 阶段推进提示
-        pending = rules.check_phase_transition(world)
-        if pending and pending != world.phase:
-            events.append({"kind": "system", "speaker": "", "text": f"已满足 {pending} 阶段进入条件，使用「推进时段」即可进入。"})
+        after_pending = rules.check_phase_transition(world)
+        if after_pending and after_pending != world.phase:
+            events.append({"kind": "system", "speaker": "", "text": f"已满足 {after_pending} 阶段进入条件，使用「推进时段」即可进入。"})
 
         # 时段到顶，自动结局
         if world.clock >= rules.MAX_CLOCK and world.phase != "ending":

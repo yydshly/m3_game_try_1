@@ -2110,6 +2110,9 @@ function renderNextStepHint(actions) {
   if (inv.length) return '当前地点可以调查。建议先' + inv[0].label + '，确认现场是否有线索。';
   if (adv.length) return '当前阶段信息已基本收集，可以' + adv[0].label + '。';
   if (acc.length) return '证据已足够，建议选择你认为最可疑的人完成指认。';
+  // No primary actions — show why advance is blocked if applicable
+  const blockedAdv = actions.find(a => a.type === 'advance' && !a.enabled && a.hint);
+  if (blockedAdv) return '暂不能推进：' + blockedAdv.hint + '。';
   return '暂无推荐动作，请查看当前目标或移动到其他地点。';
 }
 
@@ -2212,7 +2215,10 @@ async function executeAction(type, target, text) {
     }, timeoutMs);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
-    if (d.state) {
+    // Handle backend-reported errors (e.g. advance gated by conditions)
+    if (!d.ok) {
+      log('entry-system', d.error || '操作失败。');
+    } else if (d.state) {
       // Append narrative feedback for non-talk actions (talk gets SSE npc_reply)
       if (type !== 'talk' && d.state) appendActionNarrative(type, target, d.state);
       updateState(d.state);
