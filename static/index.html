@@ -222,6 +222,22 @@ header {
   line-height: 1.5;
 }
 
+/* Case progress guide */
+.case-progress { display: flex; flex-direction: column; gap: 5px; }
+.case-stat { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+.case-stat-label { color: var(--muted); }
+.case-stat-value { color: var(--text); font-weight: 500; }
+.case-hint {
+  font-size: 11px;
+  color: var(--gold);
+  line-height: 1.55;
+  margin-top: 3px;
+  padding: 6px 8px;
+  background: rgba(201,162,39,0.06);
+  border: 1px solid rgba(201,162,39,0.15);
+  border-radius: 5px;
+}
+
 /* Loading states */
 .side-action-btn.loading-this {
   opacity: 0.85;
@@ -1157,6 +1173,13 @@ header {
       </div>
     </div>
 
+    <div class="sidebar-section" id="case-progress-section">
+      <div class="sidebar-title">案件进展</div>
+      <div class="sidebar-body">
+        <div id="case-progress"></div>
+      </div>
+    </div>
+
     <div class="sidebar-section">
       <div class="sidebar-title">持有证据</div>
       <div class="sidebar-body" id="ev-container">
@@ -1547,6 +1570,45 @@ function renderObjectiveHint(s) {
   el.textContent = hint;
 }
 
+function renderCaseProgress(s) {
+  const container = document.getElementById('case-progress');
+  if (!container) return;
+  const talkedCount = (s.talked_npcs || []).length;
+  const evidenceCount = (s.inventory || []).length;
+  const phase = s.phase;
+  const totalNpcs = s.progress?.npc_count || 6;
+  const clock = s.progress?.clock || 0;
+  const maxClock = s.progress?.max_clock || 8;
+
+  let hint = '';
+  if (phase === 'dinner') {
+    hint = '与在场人物建立对话，了解各方身份与关系，为后续调查打好基础。';
+  } else if (phase === 'investigation') {
+    if (evidenceCount === 0) {
+      hint = '调查现场发现可疑物品，建立证据链是破案关键。';
+    } else if (evidenceCount < 3) {
+      hint = '已有 ' + evidenceCount + ' 条线索。继续调查其他地点，完善动机与手法。';
+    } else {
+      hint = '证据链基本形成。进入对峙前，确认最可疑的嫌疑人。';
+    }
+  } else if (phase === 'confrontation') {
+    hint = '对峙阶段：结合已有证据，选择你认为最可疑的人。';
+  } else if (phase === 'ending') {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Clock urgency
+  if (phase !== 'ending' && clock >= 6) {
+    hint += '（时间紧迫！）';
+  }
+
+  container.innerHTML =
+    '<div class="case-stat"><span class="case-stat-label">已盘问</span><span class="case-stat-value">' + talkedCount + ' / ' + totalNpcs + ' 人</span></div>' +
+    '<div class="case-stat"><span class="case-stat-label">已获证据</span><span class="case-stat-value">' + evidenceCount + ' 条</span></div>' +
+    '<div class="case-hint">' + hint + '</div>';
+}
+
 function updateState(s) {
   if (!s) return;
 
@@ -1567,6 +1629,9 @@ function updateState(s) {
 
   // objective hint
   renderObjectiveHint(s);
+
+  // case progress guide
+  renderCaseProgress(s);
 
   // evidence cards
   renderEvidence(s.evidence_details || []);
@@ -1878,7 +1943,7 @@ function renderSideActionGroups(actions, loadingType) {
   makeSideGroup('调查', inv);
   makeSideGroup('推进', adv);
   if (acc.length) makeSideGroup('指认', acc);
-  makeSideGroup('移动', move);
+  makeSideGroup('地点移动', move);
 }
 
 // ── 动作执行 ────────────────────────────────────
